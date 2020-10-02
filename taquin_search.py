@@ -111,7 +111,8 @@ class ArtificialIntelligence :
                     return result #stop at result found, do not compare results if multiple are found (depth first)
 
     def searchOriented(self) :
-        ''' implementation of the oriented search implementation (cityblock + depth)'''
+        ''' implementation of the oriented search implementation (cityblock + depth) '''
+        ''' important : Collaborative work with @Steve Mendes Reis on part of the algorithm and its optimisation '''
         iteration = 1
         frontiere = [self.init] #init at depth 0, cumulatedScore 0 (see model initialisation)
         history = set()
