@@ -9,35 +9,38 @@ final_values = [
 ]
 
 def cityBlock(array) :
+    ''' return the summ of the cityblock (manathan) distance from each case to its expected coordinates '''
     diff = 0
     for x in range(cityBlock.length) :
         for y in range(cityBlock.length) :
-            expectedCoordinates = cityBlock.mapped[array[x][y]]
+            # the final board is constant, it is more effective 
+            # to map its values to an array (or we would be in o(n^2) with 2 matrixes)
+            expectedCoordinates = cityBlock.mapped[array[x][y]] 
             diff += abs(x - expectedCoordinates[0]) + abs(y - expectedCoordinates[1])
     return diff
 
-cityBlock.length = len(final_values)
-#init cityBlock once
-mapped = []
+#avoid calculating lenght each time
+cityBlock.length = len(final_values) 
+# mapping of final, constant board as [value=>(x,y)]
+cityBlock.mapped = []
 for x in range(cityBlock.length) :
     for y in range(cityBlock.length) :
-        mapped.insert(final_values[x][y], (x,y))
-cityBlock.mapped = mapped
-
+        cityBlock.mapped.insert(final_values[x][y], (x,y))
 
 class ArtificialIntelligence :
 
     def __init__(self, init) :
-        self.init = init
+        self.init = init #stock initial board
 
     def searchBreadth(self):
+        ''' implementation of the breadth first algorithm '''
         iteration = 1
         frontiere = [self.init]
         history = set()
 
         while frontiere:
             print("\riteration count : {}, frontiere number :{}".format(iteration, len(frontiere)), end="")
-            etat = frontiere.pop(0)
+            etat = frontiere.pop(0) #get first state in frontiere
             history.add(etat)
             if etat.final(final_values):
                 return etat
@@ -53,6 +56,7 @@ class ArtificialIntelligence :
 
 
     def searchDepth(self):
+        ''' implementation of the depth first implementation'''
         iteration = 1
         frontiere = [self.init]
         history = set()
@@ -73,22 +77,26 @@ class ArtificialIntelligence :
         raise Exception("no solution")
 
     def searchIterativeDepth(self) :
+        ''' recursive implementation of the iterative depth first algorithm '''
         depth = 1
         result = None
         while result is None :    
             history = set()    
             print("Depth : {}".format(depth))
-            result = self.searchIterativeDepthStep(self.init, depth, history)
+            # will call itself recursively from the given depth
+            result = self.searchIterativeDepthStep(self.init, depth, history) 
             depth += 1
         return result
 
 
     def searchIterativeDepthStep(self, state, depth, history) :
-        print("inside, depth = {}".format(depth))
+        ''' perform a step of the depth first algorithm with depth '''
+        # terminal conditions : stop if result is found
         if state.final(final_values):
             return state
         history.add(state)
 
+        # terminal conditions : stop depth is 1 or below (1 means we are the last depth to be seen)
         if depth <= 1 :
             return None
 
@@ -96,13 +104,16 @@ class ArtificialIntelligence :
         for op in ops:
             new = state.apply(op)
             if new not in history and new.legal():
+                # call each children, wich will call his children, etc... Resulting in depth first
+                # the "frontiere" here is the recursive call, there is no data structure to stock it
                 result = self.searchIterativeDepthStep(new, depth-1, history)
                 if result is not None :
-                    return result
+                    return result #stop at result found, do not compare results if multiple are found (depth first)
 
     def searchOriented(self) :
+        ''' implementation of the oriented search implementation (cityblock + depth)'''
         iteration = 1
-        frontiere = [self.init]
+        frontiere = [self.init] #init at depth 0, cumulatedScore 0 (see model initialisation)
         history = set()
 
         while frontiere:
@@ -115,7 +126,8 @@ class ArtificialIntelligence :
             for op in ops:
                 new = etat.apply(op)
                 if new not in history :
-                    new.cumulatedScore = etat.cumulatedScore + new.depth + cityBlock(new.values)
-                    frontiere.insert(new.cumulatedScore, new)
+                    # discriminate by cumulated heuristic(cityblock/manathan) value, parent's depth, and own cityblock
+                    new.cumulatedScore = etat.cumulatedScore + new.depth + cityBlock(new.values) 
+                    frontiere.insert(new.cumulatedScore, new) #pop(0) : We try to take the fastest path possible
             iteration += 1
         raise Exception("no solution")
