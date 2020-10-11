@@ -74,8 +74,7 @@ class ArtificialIntelligence :
             if etat.final(final_values):
                 return etat
             #verify all next states
-            ops = etat.applicable_operators()
-            for op in ops:
+            for op in etat.applicable_operators():
                 new = etat.apply(op)
                 # Calculate f = g + h with g as as depth, h as cityblock
                 new.f = cityBlock(new.values) + new.depth

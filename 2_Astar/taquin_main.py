@@ -76,12 +76,12 @@ if __name__ == '__main__':
     statesPath = pathFromState(stateFinal)
     pathToHTML(statesPath, "Astar_search")
 
-    #to do one to have a comparative
-    '''
+    #do one to have a comparative
+
     #search breadth to compare # of moves
     print("breadth search starting")
     stateFinal = ia.searchBreadth()
     print("\nsearch done")
     statesPath = pathFromState(stateFinal)
     pathToHTML(statesPath, "breadth_search")
-    '''
+    
