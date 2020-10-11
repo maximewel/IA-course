@@ -21,12 +21,14 @@ A few simple searches algorithm for the "taquin" game as an introduction to sear
 An A* search implementation for the taquin game
 
 ### Structure of the project
-
 * The main modules are imported from the project 1
 * The AI class is changed to implement the A* search
-* the data folder contain a set of data to make the searches on
+
+### Main changes
+* Utilisation of a dictionary for history and the heapQ (priority queue) algorithm library for the fronteer, in order to optimize the search
 
 ## TP1 : Astar
+* the data folder contain a set of data to make the searches on
 
 ### Work done
 * Todo
