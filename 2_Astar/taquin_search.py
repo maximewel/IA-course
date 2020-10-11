@@ -59,23 +59,27 @@ class ArtificialIntelligence :
         raise Exception("no solution")
 
     def aStar(self) :
-        """ implementation of the oriented search implementation (cityblock + depth) """
-        """ important : Collaborative work with @Steve Mendes Reis on part of the algorithm and its optimisation """
+        """ implementation of the A* search implementation (cityblock/Manhattan + depth) """
         iteration = 1
         frontiere = [self.init] #init with depth 0
         history = {}
 
         while frontiere:
             print("\riteration count : {}".format(iteration), end="")
+            #take the state with the least value
             etat = heapq.heappop(frontiere)
+            #add it to ours history
             history[etat] = etat.f
+            #stop condition
             if etat.final(final_values):
                 return etat
+            #verify all next states
             ops = etat.applicable_operators()
             for op in ops:
                 new = etat.apply(op)
                 # Calculate f = g + h with g as as depth, h as cityblock
                 new.f = cityBlock(new.values) + new.depth
+                # did we visit this state ? Is the depth lesser than the already visited one ?
                 if new not in history or history[etat] > new.f :
                     heapq.heappush(frontiere, new)
             iteration += 1
