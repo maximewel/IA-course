@@ -1,5 +1,6 @@
 import numpy as np
 import heapq
+import time
 
 # given this final state
 final_values = [
@@ -7,6 +8,19 @@ final_values = [
     [4, 5, 6],
     [7, 8, 0]
 ]
+
+def simpleTimeIt(f) :
+    def inner(*args) :
+        start = time.time()
+        result = f(*args)
+        end = time.time()
+        print("Time consummed by function {}: {}s".format(f.__name__, end-start))
+        return result
+    
+    inner.__doc__ = f.__doc__
+    inner.__name__ = f.__name__
+    inner.__dict__.update(f.__dict__)    
+    return inner
 
 def cityBlock(array) :
     """ return the summ of the cityblock (manathan) distance from each case to its expected coordinates """
@@ -58,8 +72,9 @@ class ArtificialIntelligence :
             iteration += 1
         raise Exception("no solution")
 
-    def aStar(self) :
-        """ implementation of the A* search implementation (cityblock/Manhattan + depth) """
+    @simpleTimeIt
+    def aStarV1(self) :
+        """ Initial implementation of the A* search implementation (cityblock/Manhattan + depth) """
         iteration = 1
         frontiere = [self.init] #init with depth 0
         history = {}
@@ -79,7 +94,40 @@ class ArtificialIntelligence :
                 # Calculate f = g + h with g as as depth, h as cityblock
                 new.f = cityBlock(new.values) + new.depth
                 # did we visit this state ? Is the depth lesser than the already visited one ?
-                if new not in history or history[etat] > new.f :
+                if new not in history or new.f < history[new]:
+                    heapq.heappush(frontiere, new)
+            iteration += 1
+        raise Exception("no solution")
+
+    #in fact, bad idea : Seems to be always a bit longer than V1.
+    @simpleTimeIt
+    def aStar(self) :
+        """ Optimized implementation of the A* search implementation (cityblock/Manhattan + depth) """
+        iteration = 1
+        frontiere = [self.init] #init with depth 0
+        history = {}
+
+        while frontiere:
+            print("\riteration count : {}".format(iteration), end="")
+            #take the state with the least value
+            etat = heapq.heappop(frontiere)
+            #add it to ours history
+            history[etat] = etat.f
+            #stop condition
+            if etat.final(final_values):
+                return etat
+            #verify all next states
+            for op in etat.applicable_operators():
+                new = etat.apply(op)
+                # Calculate f = g + h with g as as depth, h as cityblock
+                new.f = cityBlock(new.values) + new.depth
+                # See if the value is inserted, and get it if it has been
+                try :
+                    stockedValue = history[new]
+                except :
+                    stockedValue = None
+                # did we visit this state ? Is the depth lesser than the already visited one ?
+                if stockedValue is None or new.f < stockedValue:
                     heapq.heappush(frontiere, new)
             iteration += 1
         raise Exception("no solution")
