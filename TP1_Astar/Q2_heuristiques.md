@@ -4,8 +4,8 @@
 Supposons que l’on veuille se rendre à la ville B. 
 Pour tout noeud n, on va s’intéresser aux heuristiques suivantes
 * h0(n) = 0
-* h1(n) = "la distance entre n et Bsur l'axe des x"
-* h2(n) = "la distance entre n et Bsur l’axe des y"
+* h1(n) = "la distance entre n et B sur l'axe des x"
+* h2(n) = "la distance entre n et B sur l’axe des y"
 * h3(n) = "la distance à vol d’oiseau entre n et B"
 * h4(n) = "la distance de Manhattan entre n et B"
 
@@ -20,12 +20,12 @@ Une fonction heuristique est admissible si
 L'analyse des heuristiques consiste à déterminer si les heuristiques sont admissibles, càd si elles sont toujours optimistes
 
 ### H0(n)
-* h0(n) = 0
+* h0(n) = 0\n\n
 __Admissible car l'heuristique converge__, cependant, l'intuition indique que ce n'est pas efficace...\
 Plus précisément, cela revient à _ne pas utiliser d'heuristique et à effectuer une recherche aveugle_.
 
 ### H1(n)
-* h1(n) = "la distance entre n et Bsur l'axe des x"
+* h1(n) = "la distance entre n et Bsur l'axe des x"<!-- -->
 Prenons le cas de la ville B à atteindre depuis le point n, et fixons le point A à l'angle droit :
 A -- n\
 |\
