@@ -26,7 +26,7 @@ Plus précisément, cela revient à _ne pas utiliser d'heuristique et à effectu
 
 ### H1(n)
 * h1(n) = "la distance entre n et Bsur l'axe des x"</ul>
-Prenons le cas de la ville B à atteindre depuis le point n, et fixons le point A à l'angle droit :
+Prenons le cas de la ville B à atteindre depuis le point n, et fixons le point A à l'angle droit :\
 A -- n\
 |\
 B\
