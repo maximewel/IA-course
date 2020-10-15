@@ -55,7 +55,6 @@ Les villes peuvent être reliées directement par une droite.\
 La distance de manhattan consiste à faire (abs(x) + abs(y)).\
 Selon le théorène des triangle, on a : d(B,n) <= d(B,a) + d(a,n)\
 Ainsi, le théorème ne pourra jamais être optimiste. Mathématiquement :
-\
    * Dans le meilleur des cas, les villes sont reliées par des routes perpendiculaires aux axes {x, y}, et h4(n)=h*(n)
    * Dans le pire des cas, du moment que la route est oblique, h4(n)>h*(n)</ul>
 L'heuristique est donc __non admissible.__
