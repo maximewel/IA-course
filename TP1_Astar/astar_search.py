@@ -2,7 +2,7 @@ import numpy as np
 import heapq
 import time
 import copy
-from models.models import Path
+from models.modelsdata import Path
 
 # define Python user-defined exceptions
 class CityNotFoundException(Exception):
@@ -59,9 +59,10 @@ class ArtificialIntelligence :
         #init path and history
         frontiere = [Path(citySource)]
         history = {}
+        iteration = 0
 
         while frontiere:
-            #print("\riteration count : {}".format(iteration), end="")
+            iteration += 1
             #take the state with the least value
             path = heapq.heappop(frontiere)
             currentCity = path.currentCity
@@ -69,10 +70,10 @@ class ArtificialIntelligence :
             history[currentCity] = path.f
             #stop condition
             if currentCity == cityDest:
-                return path
+                return path, iteration
             #verify all next states
             for link in currentCity.links:
-                newPath = copy.copy(path)
+                newPath = copy.deepcopy(path)
                 newPath.addLink(link)
                 nextCity = link.dest
                 # Calculate f = g + h with g as as depth, h as cityblock

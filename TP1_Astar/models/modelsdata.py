@@ -41,7 +41,7 @@ class Path:
         self.weight += link.weight
 
     def __str__(self):
-        return "=> ".join([self.citySource.name] + [link.dest.name for link in self.path])
+        return " => ".join([self.citySource.name] + [link.dest.name for link in self.path])
 
     def __hash__(self):
         return str(self).__hash__()

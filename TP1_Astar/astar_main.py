@@ -15,7 +15,6 @@ if __name__ == '__main__':
     inputCityDest = ""
     while(True):
         #get city from user
-        #os.system("cls")
         print("Welcome to the A* path finder ! Enter your cities, press enter to quit")
         print("Available cities : {}".format(graph.allCities()))
         inputCitySource = input("Origin city : ")
@@ -24,13 +23,13 @@ if __name__ == '__main__':
             break
         inputCityDest = input("Destination city : ")
         print("Available heuristics : {}".format([h for h in HeuristicsEnum]))
-        heuristicCode = int(input("Choose heuristic : "))
+        heuristicCode = int(input("Choose your heuristic : "))
         heuristic = HeuristicsEnum.heuristics[heuristicCode]
 
         try:
             #A* search
-            path = ia.aStar(inputCitySource, inputCityDest, heuristic)
-            print("found")
+            path, iter = ia.aStar(inputCitySource, inputCityDest, heuristic)
+            print(f"Path found after {iter} analysed cities. Here is the path : {path}")
         except CityNotFoundException as e:
             print(e)
         except NoPathException as e:

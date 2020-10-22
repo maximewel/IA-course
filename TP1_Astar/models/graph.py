@@ -1,6 +1,13 @@
 
 import os
-from .models import Link, City
+from modelsdata import City, Link
+import graphviz
+
+class EdgeContainer():
+    def __init__(self, source, dest, weight):
+        self.source = source
+        self.dest = dest
+        self.weight = weight
 
 class Graph :
     """
@@ -13,7 +20,7 @@ class Graph :
 
     def __init__(self):
         self.cities = self.parseCities()
-        self.parseConnections(self.cities)
+        self.links = self.parseConnections(self.cities)
 
     def relativeFilename(self, filename):
         """ return a usable filename from a relative path """
@@ -28,15 +35,18 @@ class Graph :
 
     def parseConnections(self, cities):
         """ Add all the connections from DATACONNECTION between the cities """
+        links = []
         with open(self.relativeFilename(Graph.DATACONNECTION)) as f:
             for A,B,weight in [l.split() for l in f]:
                 try:
-                    A = A.lower()
-                    B = B.lower()
-                    self.cities[A].addLink(Link(self.cities[B], weight))
-                    self.cities[B].addLink(Link(self.cities[A], weight))
+                    a = A.lower()
+                    b = B.lower()
+                    self.cities[a].addLink(Link(self.cities[b], weight))
+                    self.cities[b].addLink(Link(self.cities[a], weight))
+                    links.append(EdgeContainer(A, B, weight))
                 except KeyError:
                     print("Problem parsing connections between {} and {}".format(A,B))
+        return links
 
     def getCityByName(self, cityName):
         try :
@@ -53,7 +63,22 @@ class Graph :
             string += "city {} linked to {}\n".format(city, [str(c.dest) for c in city.links])
         return string
 
+    def makeGraphicalGraph(self):
+        dot = graphviz.Graph(comment='TP2')
+
+        #retrieve all cities as nodes
+        for city in self.cities.values():
+            dot.node(city.name, city.name)
+        
+        #retrive all edges (kept from the graph initialization, as the graph is immuable)
+        for edgeContain in self.links :
+            dot.edge(edgeContain.source, edgeContain.dest, label=edgeContain.weight)
+
+        #vizualize
+        dot.render('graph.gv', view=True)
+
 if __name__ == "__main__":  
     #to test the graph
     graph = Graph()
     print(graph)
+    graph.makeGraphicalGraph()
