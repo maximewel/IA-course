@@ -1,6 +1,27 @@
 import numpy as np
 import heapq
 import time
+import copy
+from models.models import Path
+
+# define Python user-defined exceptions
+class CityNotFoundException(Exception):
+    """ Exception raised when the city is not found in the graph. """
+
+    def __init__(self, city):
+        self.city = city
+        self.message = f"{self.city} is not in the graph !"
+        super().__init__(self.message)
+
+class NoPathException(Exception):
+    """ Exception raised when no path is found between the given, existing cities """
+
+    def __init__(self, source, dest):
+        self.source = source
+        self.dest = dest
+        self.message = f"No path found between {source} and {dest}"
+        super().__init__(self.message)
+
 
 def simpleTimeIt(f) :
     """ simple decorator that indicates how much time the function took """
@@ -17,58 +38,46 @@ def simpleTimeIt(f) :
     inner.__dict__.update(f.__dict__)    
     return inner
 
-
 class ArtificialIntelligence :
 
-    def __init__(self, init) :
-        self.init = init #stock initial board
-
-    def searchBreadth(self):
-        """ implementation of the breadth first algorithm, kept from TP1 \n
-        Used as a 'perfect' reference : It is a long (time-wise) algorithm, but it always finds the best path"""
-        iteration = 1
-        frontiere = [self.init]
-        history = set()
-
-        while frontiere:
-            print("\riteration count : {}, frontiere number :{}".format(iteration, len(frontiere)), end="")
-            etat = frontiere.pop(0) #get first state in frontiere
-            history.add(etat)
-            if etat.final(final_values):
-                return etat
-
-            ops = etat.applicable_operators()
-            for op in ops:
-                new = etat.apply(op)
-                if new not in history:
-                    #breadth first : Place children last, explore all children of depth D before going to D+1
-                    frontiere.append(new)
-            iteration += 1
-        raise Exception("no solution")
+    def __init__(self, graph) :
+        #init the graph
+        self.graph = graph
 
     @simpleTimeIt
-    def aStarV1(self) :
-        """ Initial implementation of the A* search implementation (cityblock/Manhattan + depth) """
-        iteration = 1
-        frontiere = [self.init] #init with depth 0
+    def aStar(self, citySourceName, cityDestName, heuristic) :
+        """ implementation of the A* search implementation (cityblock/Manhattan + depth) """
+
+        #get cities from user strings (with verifiation of existence)
+        citySource = self.graph.getCityByName(citySourceName)
+        cityDest = self.graph.getCityByName(cityDestName)
+        if citySource is None:
+            raise CityNotFoundException(citySourceName)
+        if cityDest is None:
+            raise CityNotFoundException(cityDestName)
+
+        #init path and history
+        frontiere = [Path(citySource)]
         history = {}
 
         while frontiere:
-            print("\riteration count : {}".format(iteration), end="")
+            #print("\riteration count : {}".format(iteration), end="")
             #take the state with the least value
-            etat = heapq.heappop(frontiere)
+            path = heapq.heappop(frontiere)
+            currentCity = path.currentCity
             #add it to ours history
-            history[etat] = etat.f
+            history[currentCity] = path.f
             #stop condition
-            if etat.final(final_values):
-                return etat
+            if currentCity == cityDest:
+                return path
             #verify all next states
-            for op in etat.applicable_operators():
-                new = etat.apply(op)
+            for link in currentCity.links:
+                newPath = copy.copy(path)
+                newPath.addLink(link)
+                nextCity = link.dest
                 # Calculate f = g + h with g as as depth, h as cityblock
-                new.f = cityBlock(new.values) + new.depth
+                newPath.f = heuristic(currentCity, cityDest) + newPath.weight
                 # did we visit this state ? Is the depth lesser than the already visited one ?
-                if new not in history or new.f < history[new]:
-                    heapq.heappush(frontiere, new)
-            iteration += 1
-        raise Exception("no solution")
+                if nextCity not in history or newPath.f < history[nextCity]:
+                    heapq.heappush(frontiere, newPath)
+        raise NoPathException(citySourceName, cityDestName)
