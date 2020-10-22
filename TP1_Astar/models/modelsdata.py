@@ -2,6 +2,7 @@
 Python TP A*
 Author : Maxime Welcken
 """
+import copy
 
 class City:
     """ simple data class that hold the city name and position (node in the graph)"""
@@ -40,8 +41,18 @@ class Path:
         self.currentCity = link.dest
         self.weight += link.weight
 
+    def clone(self):
+        path = Path(self.citySource)
+        path.weight = self.weight
+        path.currentCity = self.currentCity
+        path.path = [l for l in self.path]
+        return path
+
+    def getAllCitiesNames(self):
+        return [self.citySource.name] + [link.dest.name for link in self.path]
+
     def __str__(self):
-        return " => ".join([self.citySource.name] + [link.dest.name for link in self.path])
+        return " => ".join([str(self.citySource)] + [str(link.dest) for link in self.path])
 
     def __hash__(self):
         return str(self).__hash__()

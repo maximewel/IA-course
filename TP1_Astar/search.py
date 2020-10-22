@@ -29,7 +29,7 @@ def simpleTimeIt(f) :
         start = time.time()
         result = f(*args)
         end = time.time()
-        print("Time consummed by function {}: {}s".format(f.__name__, end-start))
+        print("Time consummed by function {}: {:.2}s".format(f.__name__, end-start))
         return result
     
     #polite decorator
@@ -63,21 +63,24 @@ class ArtificialIntelligence :
 
         while frontiere:
             iteration += 1
-            #take the state with the least value
+            #take the path with the least value, extract its last city
             path = heapq.heappop(frontiere)
             currentCity = path.currentCity
-            #add it to ours history
+            #add it to the history
             history[currentCity] = path.f
+
             #stop condition
             if currentCity == cityDest:
                 return path, iteration
-            #verify all next states
+
+            #verify all next possible path
             for link in currentCity.links:
-                newPath = copy.deepcopy(path)
+                #newPath = copy.copy(path)
+                newPath = path.clone()
                 newPath.addLink(link)
                 nextCity = link.dest
                 # Calculate f = g + h with g as as depth, h as cityblock
-                newPath.f = heuristic(currentCity, cityDest) + newPath.weight
+                newPath.f = heuristic(nextCity, cityDest) + newPath.weight
                 # did we visit this state ? Is the depth lesser than the already visited one ?
                 if nextCity not in history or newPath.f < history[nextCity]:
                     heapq.heappush(frontiere, newPath)

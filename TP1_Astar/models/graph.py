@@ -1,7 +1,6 @@
 
 import os
-from modelsdata import City, Link
-import graphviz
+from .modelsdata import City, Link
 
 class EdgeContainer():
     def __init__(self, source, dest, weight):
@@ -30,7 +29,7 @@ class Graph :
     def parseCities(self):
         """ retrieve all cities from the DATACITY file in a dict """
         with open(self.relativeFilename(Graph.DATACITY)) as f:
-            cities = {n.lower() : City(n,x,y) for n,x,y in [l.split() for l in f]}
+            cities = {n : City(n,x,y) for n,x,y in [l.split() for l in f]}
         return cities
 
     def parseConnections(self, cities):
@@ -39,10 +38,8 @@ class Graph :
         with open(self.relativeFilename(Graph.DATACONNECTION)) as f:
             for A,B,weight in [l.split() for l in f]:
                 try:
-                    a = A.lower()
-                    b = B.lower()
-                    self.cities[a].addLink(Link(self.cities[b], weight))
-                    self.cities[b].addLink(Link(self.cities[a], weight))
+                    self.cities[A].addLink(Link(self.cities[B], weight))
+                    self.cities[B].addLink(Link(self.cities[A], weight))
                     links.append(EdgeContainer(A, B, weight))
                 except KeyError:
                     print("Problem parsing connections between {} and {}".format(A,B))
@@ -50,12 +47,15 @@ class Graph :
 
     def getCityByName(self, cityName):
         try :
-            return self.cities[cityName.lower()]
+            #allow for case insensitive retrieving of cities
+            for key,value in self.cities.items():
+                if key.lower() == cityName.lower(): 
+                    return value
         except KeyError :
             return None
 
     def allCities(self):
-        return ",".join([city.capitalize() for city in self.cities.keys()])
+        return ", ".join(list(self.cities.keys()))
 
     def __str__(self):
         string = "Graphe\n"
@@ -63,22 +63,7 @@ class Graph :
             string += "city {} linked to {}\n".format(city, [str(c.dest) for c in city.links])
         return string
 
-    def makeGraphicalGraph(self):
-        dot = graphviz.Graph(comment='TP2')
-
-        #retrieve all cities as nodes
-        for city in self.cities.values():
-            dot.node(city.name, city.name)
-        
-        #retrive all edges (kept from the graph initialization, as the graph is immuable)
-        for edgeContain in self.links :
-            dot.edge(edgeContain.source, edgeContain.dest, label=edgeContain.weight)
-
-        #vizualize
-        dot.render('graph.gv', view=True)
-
 if __name__ == "__main__":  
     #to test the graph
     graph = Graph()
     print(graph)
-    graph.makeGraphicalGraph()
