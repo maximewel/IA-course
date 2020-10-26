@@ -1,6 +1,7 @@
 from enum import Enum
 from math import sqrt
 
+# List of all heuristics as functions
 def trivialHeuristic(citySource, cityDest):
     return 0
 
@@ -14,10 +15,10 @@ def birdViewDistance(citySource, cityDest):
     return sqrt((citySource.x - cityDest.x)**2 +  (citySource.y - cityDest.y)**2)
 
 def manhattanDistance(citySource, cityDest):
-    return abs(citySource.x - cityDest.x) + abs(citySource.y - cityDest.y)
+    return horizontalDistance(citySource, cityDest) + verticalDistance(citySource, cityDest)
 
 class HeuristicsEnum(Enum):
-    """ Enum class that safely holds the heuristics functions """
+    """ Enum class that safely holds and maps the heuristics functions """
 
     TRIVIAL = 1
     DISTANCEX = 2
@@ -31,6 +32,7 @@ class HeuristicsEnum(Enum):
     def __str__(self):
         return 'type {} for heuristic {}'.format(self.value, self.name)
 
+#link heuristics to enum via this dictionnary.
 HeuristicsEnum.heuristics = {
     HeuristicsEnum.TRIVIAL.value : trivialHeuristic,
     HeuristicsEnum.DISTANCEX.value : horizontalDistance,

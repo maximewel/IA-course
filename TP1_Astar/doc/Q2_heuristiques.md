@@ -22,10 +22,10 @@ L'analyse des heuristiques consiste à déterminer si les heuristiques sont admi
 ### H0(n)
 * h0(n) = 0</ul>
 __Admissible car l'heuristique converge__, cependant, l'intuition indique que ce n'est pas efficace...\
-Plus précisément, cela revient à _ne pas utiliser d'heuristique et à effectuer une recherche aveugle_.
+Plus précisément, cela revient à _ne pas utiliser d'heuristique et à effectuer une recherche en coût uniforme_.
 
 ### H1(n)
-* h1(n) = "la distance entre n et Bsur l'axe des x"</ul>
+* h1(n) = "la distance entre n et B sur l'axe des x"</ul>
 Prenons le cas de la ville B à atteindre depuis le point n, et fixons le point A à l'angle droit :\
 A -- n\
 |\
@@ -34,8 +34,8 @@ Nous réfléchissons avec une distance sur l'axe des x.\
 Le cas trivial est que les ville B et n soient horizontales, avec A=B dans ce cas :\
 B -- n\
 Dans ce cas, on a h*(n) = h1(n) = 1. L'heuritstique est admissible.\
-Ensuite, la ville B peut se déplacer sur l'axe verticale. Cependant, un déplacement sur l'axe verticale augmente H*(n) sans changer h1(n). __L'heuristique reste donc optimiste, et admissible__.\
-_L'intuission nous indique qu'omettre l'axe Y peut quand même mener à certaines erreurs de raisonnement, et donc de perte de temps de la part de l'algorithme_
+Ensuite, la ville B peut se déplacer sur l'axe vertical. Cependant, un déplacement sur l'axe verticale augmente H*(n) sans changer h1(n). __L'heuristique reste donc optimiste, et admissible__.\
+_L'intuission nous indique qu'omettre l'axe Y peut quand même mener à certains égarrements, et donc de perte de temps de la part de l'algorithme (efficacité du nombre de villes)_
 
 
 ### H2(n)

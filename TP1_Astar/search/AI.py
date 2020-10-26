@@ -4,7 +4,8 @@ import time
 import copy
 from models.modelsdata import Path
 
-# define Python user-defined exceptions
+# define custom exception to discriminate path not found and city not found
+
 class CityNotFoundException(Exception):
     """ Exception raised when the city is not found in the graph. """
 
@@ -24,7 +25,7 @@ class NoPathException(Exception):
 
 
 def simpleTimeIt(f) :
-    """ simple decorator that indicates how much time the function took """
+    """ simple decorator that indicates how much time the function took to perform """
     def inner(*args) :
         start = time.time()
         result = f(*args)
@@ -39,14 +40,19 @@ def simpleTimeIt(f) :
     return inner
 
 class ArtificialIntelligence :
+    """ ArtificialIntelligence : Class that allows to stock a graph, and ask best paths between cities using the A* algorithm """
 
     def __init__(self, graph) :
-        #init the graph
+        """ graph to work with A*. """
+        #stock the graph
         self.graph = graph
 
     @simpleTimeIt
     def aStar(self, citySourceName, cityDestName, heuristic) :
-        """ implementation of the A* search implementation (cityblock/Manhattan + depth) """
+        """ 
+        implementation of the A* search implementation (heuristic + depth).<br>
+        return path, iteration
+        """
 
         #get cities from user strings (with verifiation of existence)
         citySource = self.graph.getCityByName(citySourceName)
@@ -56,10 +62,10 @@ class ArtificialIntelligence :
         if cityDest is None:
             raise CityNotFoundException(cityDestName)
 
-        #init path and history
+        #init path and history (HISTORY could be ignored if and only if the heuristic is consistent)
         frontiere = [Path(citySource)]
         history = {}
-        iteration = 0
+        iteration = 0 #to count total cities analysed
 
         while frontiere:
             iteration += 1
@@ -73,15 +79,15 @@ class ArtificialIntelligence :
             if currentCity == cityDest:
                 return path, iteration
 
-            #verify all next possible path
+            #compute all next possible path
             for link in currentCity.links:
-                #newPath = copy.copy(path)
-                newPath = path.clone()
-                newPath.addLink(link)
+                newPath = path.clone() #get new path from current path (with its own links list)
+                newPath.addLink(link) #new weight is automatically added here
                 nextCity = link.dest
-                # Calculate f = g + h with g as as depth, h as cityblock
+                # Calculate f = g + h with g as depth, h as heuristic
                 newPath.f = heuristic(nextCity, cityDest) + newPath.weight
                 # did we visit this state ? Is the depth lesser than the already visited one ?
-                if nextCity not in history or newPath.f < history[nextCity]:
+                if nextCity not in history or newPath.f < history[nextCity]: #not usefull with consistent algorithm
                     heapq.heappush(frontiere, newPath)
+
         raise NoPathException(citySourceName, cityDestName)
