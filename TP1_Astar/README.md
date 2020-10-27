@@ -18,8 +18,8 @@ The project is composed of :
 The project can be called using two modes.
 
 ### Console mode
-This mode is an interactive one.\
-Use it by calling the main without arguments :\
+This mode is an interactive one.
+\Use it by calling the main without arguments :\
 ```Python main.py```\
 You will be prompted to enter a source city, dest city, and choose between the 5 heuristics.\
 The module calculates the shortest path, displays it using graphviz, and allows you to restart.

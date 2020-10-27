@@ -5,11 +5,11 @@ Oui ! Durant les test, il est très facile de se rendre compte que les heuristiq
 \
 Par exemple, en prenant les deux extrêmes admissibles (Heuristique __triviale__ =0, heuristique __birdview__), on voit que la birdview est systèmatiquement plus efficace.\
 Cela est du au fonctionnement de A* :\
-``` f(n) = g(h) + h(n) ```
+``` f(n) = g(n) + h(n) ```
 \
 g étant le coût du chemin, il ne change pas lorsque l'heuristique change. C'est donc à h(n), l'heuristique, d'apporter une information supplémentaire pour discriminer les chemins et les évaluer.\
 L'idée est que plus l'heuristique donne d'information, plus A* sera efficace. Toujours avec la borne superieur de la réalité : pour rester admissible, la fonction ne suréstime jamais le coût.\
-Ainsi, l'heuristique "parfait" est un heuristique qui pourra toujours donner une éstimation 'parfaite' et jamais superieure du coût réel du noeud.\
+Ainsi, l'heuristique "parfait" est une heuristique qui pourra toujours donner une éstimation 'parfaite' et jamais superieure du coût réel du noeud.\
 \
 Dans notre cas, __birdview__ est l'algorithme qui se rapproche le plus de la réalité (sans être parfait, il ne tient pas compte de la forme/courbure/etc des routes ou des vitesses/obstacles de parcours), tandis que __trivial__ est celui qui donne le moins d'information (en faites, il revient même à faire le cas dégénéré de A* - c'est une recherche en coût uniforme sans apporter l'amélioration de la recherche greedy). Les résultats du pathfinding vérifient cette théorie.\
 \
@@ -47,11 +47,13 @@ __Manhattan__ est à part car étant non admissible, elle ne respecte pas l'axio
 ## Aller plus loin : chercher la définition d’heuristique “consistente” ou “monotone”
 "In the study of path-finding problems in artificial intelligence, a heuristic function is said to be consistent, or monotone, if its estimate is always less than or equal to the estimated distance from any neighbouring vertex to the goal, plus the cost of reaching that neighbour." ([wikipedia]([wikipedia](https://en.wikipedia.org/wiki/Consistent_heuristic)))\
 \
+h1 ≤ c(n1,n2) + h2
+\
 Un heuristique consistente a un coût h(n1)\
 On peut aller au noeud n2, avec un cout C. \
 n1 --- C --- n2\
 On a l'heuristique h(n2)\
-L'heuristique est consistente ssi le coût h(n1) <= h(n2) + C, càd que la valeur h(n1) n'est jamais superieurs à la valeur du cout d'un déplacement plus l'heuristique sur le nouveau noeud sur lequel on s'est déplacé.
+L'heuristique est consistente ssi le coût h(n1) <= h(n2) + C, càd que la valeur h(n1) n'est jamais superieure à la valeur du cout d'un déplacement plus l'heuristique sur le nouveau noeud sur lequel on s'est déplacé.
 
 ### Quel est son impact sur les performances de l’algorithme A* ?
 "In the A* search algorithm, using a consistent heuristic means that once a node is expanded, the cost by which it was reached is the lowest possible, under the same conditions that Dijkstra's algorithm requires in solving the shortest path problem"([wikipedia]([wikipedia](https://en.wikipedia.org/wiki/Consistent_heuristic)))\
@@ -75,8 +77,8 @@ Si les villes ne peuvent pas être traversées deux fois, la solution la plus si
 2. __x__ Oui : h1 <= c+h2 car dans le pire des cas, c = différence(h1,h2) si les villes sont sur le même axe horizontal. Sinon, la différence en Y rajoute du poid au coût mais pas à l'heuristique.
 3. __y__ Oui : Pareil, h1 <= c+h2 car si les villes sont alignées verticalement, c= différence(h1,h2), et si les villes ne sont pas alignées, cela rajoute du poid au coût mais pas à la différence des heuristiques
 4. __birdview__ Oui : le birdview renvoit la distance euclidienne entre la ville et la destination. Si on imagine que la destination est au centre, le pire des cas possible est si les villes sont alignées A--B--destination. Dans ce cas, diff(h1,h2) = C, car le déplacement en ligne droite = la différence de rayon entre les deux villes. Si les villes ne sont pas alignées, on aura forcément c > diff(h1,h2) car la différence (h1,h2) = différence de rayon entre R1,R2 les rayons des cercles C1,C2 centrés en destination et passant par les villes. Cette différence de rayon est forcément inferieur au coût de déplacement si les villes ne sont pas alignées, et égal si elles le sont.
-5. __manhattan__ : Non : N'étant pas admissible, l'heuristique peut suréstimer la valeur du cout de déplacement. On peut donc se retrouver avec h1 > c+h2 si, par exemple, h1 suréstime le trajet entre h1 et h2, et que le trajet de h2 à déstination est parfaitement rectangulaire. La suréstimation est donc sur le cout C, et h1 > c + h2.<ul>
+5. __manhattan__ : Non : N'étant pas admissible, l'heuristique peut suréstimer la valeur du cout de déplacement. On peut donc se retrouver avec h1 > c+h2 si.Par exemple, si h1 et h2 ont une liaison en ligne droite, manhattan suréstime le trajet entre h1 et h2 (car il prend le trajet "rectangulaire"). Si le trajet de h2 à déstination est parfaitement rectangulaire, la suréstimation est donc sur le cout C entre h1 et h2, diff(h1,h2) > C (la différence des heuristiques est plus grande que le coût), donc h1 > c + h2.<ul>
 
 
 Pour l'heuristique, j'utiliserais __Birdview__ si je n'ai aucune limitation technique (liée au hardware). C'est celle qui est la plus efficace des 4 premières, elle est admissible, et elle est consistente. J'enlèverais le check sur l'history.\
-Si vraiment le hardware est limité, je pourrais envisager le __Manhattan__, en gardant à l'ésprit que le chemin trouvé n'est pas forcément le plus optimal.\
+Si vraiment le hardware est limité, je pourrais envisager le __Manhattan__, en gardant à l'ésprit que le chemin trouvé n'est pas forcément le plus optimal.
