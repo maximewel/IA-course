@@ -37,7 +37,8 @@ path : Paris (1062,870) => Brussels (983,992) => Amsterdam (957,1096) => Hamburg
 On voit que la recherche avec manhattan -bien que plus efficace en terme de villes- n'a pas rendu le chemin le plus court.\
 Ceci est dû au fait qu'un algorithme A* avec heuristique admissible suit le principe de la recherche en coût uniforme : Le chemin le plus court sera __toujours renvoyé__. Dans notre cas, les algorithmes __trivial__, __x__, __y__ et __birdview__ renvoient toujours le chemin le plus court.\
 Manhattan est plus efficace car, suréstimant la réalité, elle penche plus vers un algorithme de recherche _greedy_, qui n'offre pas de guarantie de chemin optimal.\
-A retenir : L'axiome principale d'A* est d'utiliser une heuristique strictement admissible, sinon l'optimalité n'est plus assurée.
+\
+A retenir : A* est un algorithme de recherche mêlant la recherche en coût uniforme __et__ la recherche greedy. Tant que l'heuristique est admissible, la guarantie de chemin optimal de coût uniforme est respecté. Dès qu'elle ne l'est plus, l'heuristique prend le pas - on est alors sur une recherche greedy, et le chemin obtenu n'est plus guarantit d'être optimal. Plus l'heuristique apporte d'information, plus la recherche est efficace (en nombre de noeuds visités)
 
 ## Dans un cas réel, quelle heuristique utiliseriez-vous ? Pourquoi ?
 Toute heuristique admissible fournira le chemin le plus court identique. Cependant, on a vu que les heuristiques admissibles fournissant le plus d'information possible améliorent grandement l'efficacité de la recherche. C'est la valeur de h dans f = g + h qui va dicter les villes parcourues.\
