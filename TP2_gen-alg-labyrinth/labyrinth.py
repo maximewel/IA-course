@@ -87,17 +87,21 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
 
     def _parse_code(code):
         """ Convert bit string to a Code namedtuple """
-        return Code(DIRECTIONS[code][0], DIRECTIONS[code][1])
+        direction = DIRECTIONS[code]
+        return Code(direction[0], direction[1])
         
     def _decode(individual):
         """ Parse each code of the full chromosome (aka individual) """
-        codes = [_parse_code(gene) for gene in individual]
-        return codes
+        return [_parse_code(gene) for gene in individual]
 
     def display_chromosome(individual):
         """ Convert chromosome to a readable format (path of cases : (0,0)->(1,1)->...) """
         path = _chromosome_as_cells(individual)
         return " -> ".join(str(cell) for cell in path)
+
+    def display_chromosome_moves(individual):
+        """ Convert chromosome to a readable format (path of cases : (0,0)->(1,1)->...) """
+        return ", ".join([code.str for code in _decode(individual) while code != end_cell])
 
     """ --- FITNESS DEFINITON --- """
     def find_correct_random_correction(case, wrongGene):
@@ -176,13 +180,13 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
         return winners
 
     TARGET = end_cell
-    MUTPB = 0.3
+    MUTPB = 0.2
     CXPB = 0.7
-    tournSize = 7
+    tournSize = 900
     solution = None
 
     #init pop
-    pop = toolbox.init_population(n=10)
+    pop = toolbox.init_population(n=1000)
     #give base fitness
     toolbox.evaluate(pop, TARGET)
     #init time
@@ -223,9 +227,8 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
 
     winner = solution if solution is not None else find_winners(pop)
     if winner :
-        print(f"\nwinner : {display_chromosome(winner)}")
         print(f"found in {iterations} iterations and {timePassed}s")
+        print(f"Path found : {display_chromosome_moves}")
         return _chromosome_as_cells(winner)
     else :
-        print(f"Solution not found")
         return None
