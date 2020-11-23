@@ -2,4 +2,8 @@
     "python.autoComplete.extraPaths": [
         "C:/Dev/IA"
     ],
+    "python.linting.pylintArgs": [
+        "--generated-members=toolbox.*, creator.*"
+    ],
+    "jupyter.jupyterServerType": "local",
 }
