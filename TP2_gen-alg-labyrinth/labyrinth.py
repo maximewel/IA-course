@@ -62,9 +62,9 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
     h = grid.shape[0]
     w = grid.shape[1]
     # number of steps of the chromosome, M * N/2
-    CHROMOSOME_LENGTH = math.ceil(h * w / 2)
+    #CHROMOSOME_LENGTH = math.ceil(h * w / 2)
     # if there is only 10% walls, we can aim better - the best opimized path (M+N as the max manhattan) [maybe too optimistic ?]
-    #CHROMOSOME_LENGTH = math.ceil(h + w)
+    CHROMOSOME_LENGTH = math.ceil(h + w)
 
     """ --- ENCODING --- """
     #tuple that code the operations as (apply, str) representation to avoid creating classes for each direction
@@ -79,14 +79,7 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
     }
     ENCODING_MIN, ENCODING_MAX = 0, len(DIRECTIONS)-1
 
-    def chromosome_as_cells(individual):
-        """ Return the chromosome as a list of successive cells - stop if "end" is found"""
-        path = [start_cell]
-        for code in _decode(individual):
-            path.append(code.apply(path[-1])) #append each move to the last case of the list (=current case)
-            if path[-1] == end_cell :
-                return path
-        return path
+    """ --- CHROMOSMOE DISPLAY AND DECODING --- """
 
     def _parse_code(code):
         """ Convert bit string to a Code namedtuple """
@@ -100,13 +93,23 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
         """ Convert chromosome to a readable format (Path of cells : (0,0)->(1,1)->...) """
         return " -> ".join(str(cell) for cell in chromosome_as_cells(individual))
 
+    def chromosome_as_cells(individual):
+        """ Return the chromosome as a list of successive cells - stop if "end" is found"""
+        path = [start_cell]
+        for code in _decode(individual):
+            path.append(code.apply(path[-1])) #append each move to the last case of the list (=current case)
+            if path[-1] == end_cell :
+                return path
+        return path
+
+
+    """ --- FITNESSES --- """
+
     def valid(case):
         """ return wether a case is valid (in board, not a wall) """
         x,y = case[0], case[1]
         return x in range(w) and y in range(h) and grid[x][y] == 0
 
-
-    """ --- FITNESSES --- """
 
     def eval_and_correct(individual, target):
         """ compute the path of the chromosome, do on-the-fly corrections """
@@ -171,11 +174,32 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
         winners = [i for i in population if i.fitness.values[0] == 0]
         return winners
 
+    def find_best(population):
+        fitnesses = [ind.fitness.values[0] for ind in population]
+        min_fit = min(fitnesses)
+        return population[fitnesses.index(min_fit)]
+
+
+    def find_path_lenght(indiv):
+        """ return the lenght of the path of the indiv from start to end of sequence of end_case """
+        return len(chromosome_as_cells(indiv))
+
+    def find_winner(winners):
+        """ return the winner amongst the winners """
+        #case : no winner
+        if len(winners) == 0:
+            return None
+        #case : one winner
+        if len(winners) == 1:
+            return winners[0]
+        #case : Take the best winner
+        from functools import reduce
+        return reduce(lambda ind1,ind2 : ind1 if find_path_lenght(ind1) < find_path_lenght(ind2) else ind2, winners)
+
     TARGET = end_cell
     MUTPB = 0.3
     CXPB = 0.7
-    tournSize = 100
-    solution = None
+    tournSize = 10
 
     #init pop
     pop = toolbox.init_population(n=200)
@@ -207,20 +231,22 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
         pop = offspring
         #pop eval
         toolbox.evaluate(pop, TARGET)
-        # Search for the solution
-        fitnesses = [ind.fitness.values[0] for ind in pop]
-        min_fit = min(fitnesses)
-        best = pop[fitnesses.index(min_fit)]
-        if not solution or best.fitness.values[0] < solution.fitness.values[0]:
-            solution = best
 
         #calculate time & iterations
         timePassed = time.time() - start
         iterations += 1
+    #because of the "\r iteration", we have to put an endline at the end
+    print()
 
-    winner = solution if solution is not None else find_winners(pop)
-    if winner :
-        print(f"\nfound in {iterations} iterations and {timePassed}s")
-        print(f"Path found : {chromosome_as_cells(winner)}")
-        return chromosome_as_cells(winner)
-    return None
+    winners = find_winners(pop)
+    finalChromosome = None
+    if winners :
+        finalChromosome = find_winner(winners)
+        print("Winner found !")
+    else:
+        finalChromosome = find_best(pop)
+        print("No winner found, fallback on best path")
+
+    print(f"chromosone found in {iterations} iterations in {timePassed}s")
+    print(f"The population was composed of {len(pop)} individual of {CHROMOSOME_LENGTH} genes, with {tournSize} selectionned at each iteration")
+    return chromosome_as_cells(finalChromosome)
