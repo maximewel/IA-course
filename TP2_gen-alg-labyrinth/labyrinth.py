@@ -64,7 +64,8 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
     # number of steps of the chromosome, M * N/2
     #CHROMOSOME_LENGTH = math.ceil(h * w / 2)
     # if there is only 10% walls, we can aim better - the best opimized path (M+N as the max manhattan) [maybe too optimistic ?]
-    CHROMOSOME_LENGTH = math.ceil(h + w)
+    #CHROMOSOME_LENGTH = math.ceil(h + w)
+    CHROMOSOME_LENGTH = 5
 
     """ --- ENCODING --- """
     #tuple that code the operations as (apply, str) representation to avoid creating classes for each direction
@@ -110,39 +111,63 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
         x,y = case[0], case[1]
         return x in range(w) and y in range(h) and grid[x][y] == 0
 
-
-    def eval_and_correct(individual, target):
+    '''  def eval_and_correct(individual, target):
         """ compute the path of the chromosome, do on-the-fly corrections """
         #init
         currentCase = start_cell
-        path =  [start_cell]
+        path = [start_cell]
         idealistic = Manhattan(start_cell, end_cell)
         minManhattan = idealistic
         
         #iterate over every gene of the chromosome, keep index for eventual correction
         for i in range(len(individual)):
+            #parse next case, correct if necessary
             gene = individual[i]
-
             nextCase = _parse_code(gene).apply(currentCase)
             while not valid(nextCase):
                 #correct code of chromosome randomly
                 individual[i] = random.randint(ENCODING_MIN, ENCODING_MAX)
                 nextCase = _parse_code(individual[i]).apply(currentCase)
-
             currentCase = nextCase
+
+            #process manhattan
             currentManhattan = Manhattan(currentCase, target)
-            if(currentManhattan == 0):
-                #we found the end - stop here !
+
+            #we found the end - stop here !
+            if currentManhattan == 0:
                 return 0
 
             path.append(currentCase)
-            if(currentManhattan < minManhattan):
+            if currentManhattan < minManhattan:
                 minManhattan = currentManhattan
                 distinctCells = len(set(path))
 
         #return the minimal mahnattan value (the "closer" case of the end with the least amount of steps") as fitness value
-        #with its associated penalties (ex : Did we come back on an already seen case ?)
-        return minManhattan + abs(idealistic - distinctCells)
+        #add the difference between idealistinc and distincts cells to try and optimize
+        return minManhattan + abs(idealistic - distinctCells)'''
+
+    def eval_and_correct(individual, target):
+        """ compute the path of the chromosome, do on-the-fly corrections """
+        #init
+        currentCase = start_cell
+        
+        #iterate over every gene of the chromosome, keep index for eventual correction
+        for i in range(len(individual)):
+            #parse next case, correct if necessary
+            gene = individual[i]
+            nextCase = _parse_code(gene).apply(currentCase)
+            while not valid(nextCase):
+                #correct code of chromosome randomly
+                individual[i] = random.randint(ENCODING_MIN, ENCODING_MAX)
+                nextCase = _parse_code(individual[i]).apply(currentCase)
+            currentCase = nextCase
+            #we found the end - stop here !
+            if currentCase == target:
+                return 0
+        #https://www.researchgate.net/publication/233786685_A-Mazer_with_Genetic_Algorithm
+        #return the ratio (current - start) / (end - current) * 100
+        if start_cell == currentCase : return 1000 #very bad
+        return (Manhattan(target, currentCase) / Manhattan(start_cell, currentCase)) * 100
 
     toolbox = base.Toolbox()
     def fitness(individual, target):
@@ -150,13 +175,13 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
         return (eval_and_correct(individual, target),)
 
     toolbox.register("fitness", fitness)
-    #fitness tries to reach 0 (0 = Reached goal)
+    #fitness tries to reach 0 (0 = Reached end)
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMin)
 
-
     """ --- MUTATIONS AND SELECTION --- """
-    toolbox.register("mate", tools.cxOnePoint)
+    #toolbox.register("mate", tools.cxOnePoint)
+    toolbox.register("mate", tools.cxMessyOnePoint) #HERE WARNING
     toolbox.register("mutate", tools.mutUniformInt, low=ENCODING_MIN, up=ENCODING_MAX, indpb=0.1)
     toolbox.register("select", tools.selTournament)
 
@@ -171,14 +196,16 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
     toolbox.register("evaluate", evaluate_population)
 
     def find_winners(population):
-        winners = [i for i in population if i.fitness.values[0] == 0]
-        return winners
+        #winners = [i for i in population if i.fitness.values[0] == 0]
+        return list(filter(lambda pop: pop.fitness.values[0] == 0, population))
 
     def find_best(population):
-        fitnesses = [ind.fitness.values[0] for ind in population]
+        """fitnesses = [ind.fitness.values[0] for ind in population]
         min_fit = min(fitnesses)
-        return population[fitnesses.index(min_fit)]
-
+        return population[fitnesses.index(min_fit)]"""
+        #see test_min
+        index = np.argmin(np.array([ind.fitness.values[0] for ind in population]))
+        return population[index]
 
     def find_path_lenght(indiv):
         """ return the lenght of the path of the indiv from start to end of sequence of end_case """
@@ -192,24 +219,23 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
         #case : one winner
         if len(winners) == 1:
             return winners[0]
+
         #case : Take the best winner
         from functools import reduce
-        return reduce(lambda ind1,ind2 : ind1 if find_path_lenght(ind1) < find_path_lenght(ind2) else ind2, winners)
+        return reduce(lambda ind1, ind2: ind1 if find_path_lenght(ind1) < find_path_lenght(ind2) else ind2, winners)
 
-    TARGET = end_cell
-    MUTPB = 0.3
-    CXPB = 0.7
+    # genetic algorithm parameters
+    MUTPB = 0.5
+    CXPB = 0.4
+    populationSize = 100
     tournSize = 10
-
-    #init pop
-    pop = toolbox.init_population(n=200)
-    #give base fitness
-    toolbox.evaluate(pop, TARGET)
+    #init pop, fitness
+    pop = toolbox.init_population(n=populationSize)
+    toolbox.evaluate(pop, end_cell)
     #init time
     start = time.time()
     timePassed = 0
     iterations = 0
-
     #while loop
     while timePassed < max_time_s and len(find_winners(pop)) <= 0:
         print(f"\r iteration {iterations}", end="")
@@ -230,7 +256,7 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
         #remplace pop
         pop = offspring
         #pop eval
-        toolbox.evaluate(pop, TARGET)
+        toolbox.evaluate(pop, end_cell)
 
         #calculate time & iterations
         timePassed = time.time() - start
