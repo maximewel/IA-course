@@ -158,11 +158,9 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
             if currentCase == target:
                 return (0, i+1) #i+1 : iterations start at 0, and we want the number of steps
 
-        #https://www.researchgate.net/publication/233786685_A-Mazer_with_Genetic_Algorithm
-        #return the ratio (current - start) / (end - current) * 100 <- this is what he uses
         #we use (end ~ current) / (start ~ current) * 100 (as a pourcentage)
         if start_cell == currentCase: return (1000,1000) #very bad for our calcul (division by zero)
-        return ((Manhattan(target, currentCase) / Manhattan(start_cell, currentCase)) * 100, i+1)
+        return ((float(Manhattan(target, currentCase)) / Manhattan(start_cell, currentCase)) * 100, i+1)
 
     toolbox = base.Toolbox()
     def fitness(individual, target):

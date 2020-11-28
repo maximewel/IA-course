@@ -156,7 +156,7 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
         #return the ratio (current - start) / (end - current) * 100 <- this is what he uses
         #we use (end ~ current) / (start ~ current) * 100 (as a pourcentage)
         if start_cell == currentCase: return (1000,1000) #very bad for our calcul
-        return ((Manhattan(target, currentCase) / Manhattan(start_cell, currentCase)) * 100, i+1)
+        return ((float(Manhattan(target, currentCase)) / Manhattan(start_cell, currentCase)) * 100, i+1)
 
     toolbox = base.Toolbox()
     def fitness(individual, target):
