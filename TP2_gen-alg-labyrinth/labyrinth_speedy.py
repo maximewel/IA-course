@@ -64,7 +64,7 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
     h = grid.shape[0]
     w = grid.shape[1]
     #With the non-fixed length genetic algorithm, the length will grow : We have to start little (so that we can slowly go toward goal)
-    CHROMOSOME_LENGTH = math.ceil((h + w) / 8) #ceil : at least 1 at start or we could have problems
+    CHROMOSOME_LENGTH = math.ceil((h + w) / 8)
 
     """ --- ENCODING --- """
     #tuple that code the operations as (apply, str) representation to avoid creating classes for each direction
@@ -72,49 +72,49 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
 
     #operations as (apply, str) tuple. apply on the tuple representing the current case, yield the next case
     DIRECTIONS = {
-        0: Code(lambda caseTuple: (caseTuple[0]-1, caseTuple[1]), "left"),
-        1: Code(lambda caseTuple: (caseTuple[0]+1, caseTuple[1]), "right"),
-        2: Code(lambda caseTuple: (caseTuple[0], caseTuple[1]-1), "top"),
-        3: Code(lambda caseTuple: (caseTuple[0], caseTuple[1]+1), "bottom")
+        0: Code(lambda caseTuple : (caseTuple[0]-1, caseTuple[1]), "left"),
+        1: Code(lambda caseTuple : (caseTuple[0]+1, caseTuple[1]), "right"),
+        2: Code(lambda caseTuple : (caseTuple[0], caseTuple[1]-1), "top"),
+        3: Code(lambda caseTuple : (caseTuple[0], caseTuple[1]+1), "bottom")
     }
     ENCODING_MIN, ENCODING_MAX = 0, len(DIRECTIONS)-1
 
     """ --- CHROMOSMOE DISPLAY AND DECODING --- """
 
     def _parse_code(code):
-        """ Convert integer geneetic code to a Code namedtuple """
+        """ Convert bit string to a Code namedtuple """
         return DIRECTIONS[code]
         
     def _decode(individual):
         """ Parse each code of the full chromosome (aka individual) """
         return [_parse_code(gene) for gene in individual]
 
-    #DEPRECATED, useless on 40*40 maps... Specifically when there is a view to display the chromosome
     def display_chromosome(individual):
         """ Convert chromosome to a readable format (Path of cells : (0,0)->(1,1)->...) """
         return " -> ".join(str(cell) for cell in chromosome_as_cells(individual))
 
     def chromosome_as_cells(individual):
-        """ Return the chromosome as a list of successive cells - stop if "end" is found """
+        """ Return the chromosome as a list of successive cells - stop if "end" is found"""
         path = [start_cell]
         for code in _decode(individual):
             path.append(code.apply(path[-1])) #append each move to the last case of the list (=current case)
-            if path[-1] == end_cell:
-                #immediatly stop once the end is found
+            if path[-1] == end_cell :
                 return path
-        #return the complete path if the end is never reached
         return path
 
-    """ --- BEST AND WINNERS SEARCHES --- """
+    """ --- FITNESSES --- """
+    def valid(case):
+        """ return wether a case is valid (in board, not a wall) """
+        x,y = case[0], case[1]
+        return x in range(w) and y in range(h) and grid[x][y] == 0
+
+        """ --- BEST AND WINNERS SEARCHES --- """
     def find_path_lenght(indiv):
-        """ return the lenght of the path of the individual as a list of cells
-            ->len(indiv)+1 because len(indiv) is the number of steps, not cells
-            ->stop the count if end_cell is reached
-        """
+        """ return the lenght of the path of the indiv from start to end of sequence of end_case """
         return len(chromosome_as_cells(indiv))
 
     def find_best(population):
-        """ use npt o find the best amongst a list of solutions (see test_min) """
+        """use np to find the best amongst a list of solutions see test_min"""
         index = np.argmin(np.array([ind.fitness.values[0] for ind in population]))
         return population[index]
 
@@ -133,15 +133,9 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
         #case : Take the best winner
         return list(reduce(lambda ind1, ind2: ind1 if find_path_lenght(ind1) < find_path_lenght(ind2) else ind2, winners))
 
-    """ --- FITNESSES --- """
-    def valid(case):
-        """ return wether a case is valid (in board, not a wall) """
-        x, y = case[0], case[1]
-        return x in range(w) and y in range(h) and grid[x][y] == 0
-
     def eval_and_correct(individual, target):
         """ compute the path of the chromosome, do on-the-fly corrections """
-        #init : start_cell is always assumed
+        #init
         currentCase = start_cell
         #iterate over every gene of the chromosome, keep index instead of foreach for eventual correction
         for i in range(len(individual)):
@@ -149,34 +143,35 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
             gene = individual[i]
             nextCase = _parse_code(gene).apply(currentCase)
             while not valid(nextCase):
-                #correct code of chromosome randomly - random to avoid favorising a direction
+                #correct code of chromosome randomly
                 individual[i] = random.randint(ENCODING_MIN, ENCODING_MAX)
                 nextCase = _parse_code(individual[i]).apply(currentCase)
             currentCase = nextCase
 
             #we found the end - stop here !
             if currentCase == target:
-                return (0, i+1) #i+1 : iterations start at 0, and we want the number of steps
+                return (0, i+1) #i+1 : steps + startcase  + end case
 
         #https://www.researchgate.net/publication/233786685_A-Mazer_with_Genetic_Algorithm
         #return the ratio (current - start) / (end - current) * 100 <- this is what he uses
         #we use (end ~ current) / (start ~ current) * 100 (as a pourcentage)
-        if start_cell == currentCase: return (1000,1000) #very bad for our calcul (division by zero)
+        if start_cell == currentCase: return (1000,1000) #very bad for our calcul
         return ((Manhattan(target, currentCase) / Manhattan(start_cell, currentCase)) * 100, i+1)
 
     toolbox = base.Toolbox()
     def fitness(individual, target):
         """ Fitness of the chromosome with on-the-fly correction of failing genes """
+        #return (eval_and_correct(individual, target),)
         return eval_and_correct(individual, target)
 
     toolbox.register("fitness", fitness)
-    # negative values : fitness tries to reach smallest possible numbers in (ratio, length)
-    # weights : ratio is always a TOP priority (0 = reached target !)
+    #fitness tries to reach smallest possible numbers in (ratio, length). ratio is always a TOP priority (0 = reached target !)
     creator.create("FitnessMin", base.Fitness, weights=(-10000.0, -10.0))
     creator.create("Individual", list, fitness=creator.FitnessMin)
 
     """ --- MUTATIONS AND SELECTION --- """
-    toolbox.register("mate", tools.cxMessyOnePoint)
+    #toolbox.register("mate", tools.cxOnePoint)
+    toolbox.register("mate", tools.cxMessyOnePoint) #HERE WARNING
     toolbox.register("mutate", tools.mutUniformInt, low=ENCODING_MIN, up=ENCODING_MAX, indpb=0.1)
     toolbox.register("select", tools.selTournament)
 
@@ -190,7 +185,6 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
             ind.fitness.values = toolbox.fitness(ind, target)
     toolbox.register("evaluate", evaluate_population)
 
-
     # genetic algorithm hyper-parameters
     MUTPB = 0.6
     CXPB = 0.7
@@ -200,17 +194,12 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
     pop = toolbox.init_population(n=populationSize)
     toolbox.evaluate(pop, end_cell)
 
-    #REFINED SEARCH
+    #SPEEDY SEARCH
     #init parameters
     start = time.time()
     timePassed = iterations = 0
-    caseFound = False
-    #stagnancy supervisors
-    sameLenghtCounter = 0 #stagnancy counter
-    sameLengthStop = 5 #stagnancy stop
-    lastLengthPath = 0 #stagnancy memory
     #main loop
-    while timePassed < max_time_s and sameLenghtCounter < sameLengthStop:
+    while timePassed < max_time_s and len(find_winners(pop)) <= 0:
         print(f"\r iteration {iterations}", end="")
 
         # --- SEL ---
@@ -230,29 +219,11 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
         #remplace pop & eval new pop
         pop = offspring
         toolbox.evaluate(pop, end_cell)
-
-        #phase 1 - growing chromosomes, did we reach the final case ?
-        if not caseFound:
-            #keep fitness to give actual length of path to user (fit[2])
-            fitnessesAtTarget = [ind.fitness.values for ind in pop if ind.fitness.values[0] == 0]
-            if fitnessesAtTarget:
-                #enter phase 2, change mutation algorithm
-                caseFound = True
-                toolbox.register("mate", tools.cxOnePoint)
-                print(f"\ncase found, now mutating with cxOnePoint without growing")
-                print(f"Current length : {[fit[1] for fit in fitnessesAtTarget]}")
-        #phase 2 - we are in standard mutation, trying to refine the path
-        else:
-            #check for stagnancy : can we go faster ?
-            fastestPath = np.min([ind.fitness.values[1] for ind in pop if ind.fitness.values[0] == 0])
-            sameLenghtCounter += 1 if fastestPath == lastLengthPath else 0
-            lastLengthPath = fastestPath
-        
-        #end of this cycle - calculate time & iterations
+        #calculate time & iterations
         iterations += 1
         timePassed = time.time() - start
 
-    #end of cycles :-)
+    #end of simulation :-)
     winners = find_winners(pop)
     if winners:
         finalChromosome = find_winner(winners)

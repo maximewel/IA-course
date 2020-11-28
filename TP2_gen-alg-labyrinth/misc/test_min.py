@@ -1,7 +1,6 @@
 """
 Author : Maxime Welcklen
-A simple test for the best_ind function
-It is done using a list in the 
+A simple test for the best_ind function (what's faster to retrieve min individual ?)
 """
 from random import randint
 import numpy as np
