@@ -191,7 +191,14 @@ This is this grow that assures our convergence at minimal cost : We can check on
 This is also the reason we should never continue with this function when the goal is reached. The chunk added are relative to the individuals sizes, and when they reach 500-600 in size (typically on 40*40 grids), this grow can be very fast and very detrimental to the speed of the iteration.
 #### Phase 2 - fixed-size
 ```toolbox.register("mate", tools.cxOnePoint)```\
-For phase II, the algorithm go back to a standard OnePoint used in the first "le compte est bon" algorithm. It goes back to fixed-size crossovers, with equal-length sequences of genes exchanged between individuals.
+For phase II, the algorithm go back to a standard OnePoint used in the first "le compte est bon" algorithm. It goes back to fixed-size crossovers, with equal-length sequences of genes exchanged between individuals.\
+A CXTwoPoint would be another alternative to the CXOnePoint. The difference beeing :
+* The CXOnePoint compute a single crossover point, changing the rest of the individual after this point
+* The CXTwoPoint compute two crossover points, keeping the start and the end of the individuals, changing the middle of them
+
+*Source : https://en.wikipedia.org/wiki/Crossover_(genetic_algorithm)*\
+The CXtwoPoint had the disadvantage of beeing problematic on terrains with obstacles at the start or end : It induces less mutation for the start/end of the path of the individuals. Therefore, the CXOnePoint is preferred.\
+If the start and the end of the grids are more or less clear, a CXTwoPoint could be very good at keeping those path intacts, and changing only the optimizable part (the middle). But it is more specialized, so we keep the more flexible one.
 
 ## Hyper-parameters
 The hyper parameters are very important for the algorithm to function correctly, and must be tailored to the problem it is facing.
@@ -281,7 +288,8 @@ This implementation represents a successfull proof-of-concept of the application
 This philosophy could be pushed further, maybe by separating the two phases in different "while" loop to make the code more understandable, and to trully differentiate and optimize each phase. This could mean pushing the strategies to their true limits, and could yield even better results while staying very fast.\
 The dual-strategies algorithm is also very flexible with the given grids - adapting its size to the shape and size of the terrain.\
 Finally, the optimization of the paths is not a focus point of this algorithm. The speed is clearly the objective here, and the results show that the results path are always good, but not everytime quite perfect - with a high risk of local maximum due to phase I. But this is expected with the current implementation.\
+This TP teached me that the genetic algorithm results are very dependent of their hyper parameters, and **must be specialized for the problems we face**. It was hard to find a good solution for grids going from 10\*10 to 40\*40, and the solution can be even more optimized if we know the size and general topology of the labyrinth.\
 \
 Finally, if you want to test how crazy the speedy method is, we recommend you test the notebook in this project.\
 It tests both methods (speedy and refined) on a 40\*40 grid. it shows the optimized or not-optimized path.\
-You can also crank this number to 100*100 and be amazed by the ~2 seconds it take to resolve the problem !
+You can also crank this number to 100*100 and be amazed by the ~1-4 seconds it take for the speedy to resolve the problem !
