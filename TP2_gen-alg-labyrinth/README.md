@@ -15,7 +15,7 @@ The solve_lab function has the start case and end case as parameters.\
 Stocking a list of cells would be terrible :
 * The generation of a **valid** path (with adjacent cells) would take a lot of verification -and thus time
 * The storage would be non-efficient (tuples of x,y)
-* The read-write times would be at least double the time of a simpler solution\
+* The read-write times would be at least double the time of a simpler solution
 
 In lieu of cells, the **steps** are stocked. Only foor steps have to be stocked :\
 ```Left Right Top Bottom```\
@@ -26,12 +26,12 @@ The steps can be generated fully randomly - your next cell is necessarily adjace
 ### Invalid path gestion
 With the fully random step generation, two things can go wrong :
 * The next step moves the chromosome into a wall
-* The next step moves the chromosome outside of the grid\
+* The next step moves the chromosome outside of the grid
 
 The usual gestions of an invalid path are :
 * Ignoring the problem while parsing(just reading the next case), as we did in "le compte est bon !"
 * Correcting the problem - changing the gene to be a valid one
-* Declare this chromosome with an "invalid" fitness, thus not selecting it further\
+* Declare this chromosome with an "invalid" fitness, thus not selecting it further
 
 The third method is put away because on a 40*40 grid, disbanding all chromosomes going *once* into a wall would be catastrophic.\
 The first method is not taken because we could have very instable chromosome : The mutation of a single gene could escalade into the ignoring / de-ignoring of a dozen other genes.\
@@ -57,14 +57,16 @@ It proved its limitation time-wise (it is pretty slow) and with complexe path (e
 The **FAST AND FURIOUS** approach (It *must* be yelled) is the first try with a genetic algorithm with growing chromosomes.\
 Its implementation is kept verbatim in labyrinth_speedy.py as a comparaison for our third method (and a fallback would it fail, but it dit not fail)
 * The results are very, very, very fast : <1s for 40/*40, and ~2s for 100\*100 grids !
-* This algorithm does not yield an optimized path - it yields the first path it come into\
+* This algorithm does not yield an optimized path - it yields the first path it come into
+
 This algorithm is PERFECT would we search for a fast path from A to B (Game pathfinding maybe ?) : the <1s for 40\*40 grid is very promising.\
 But as we kept bumping into sub-optimized path, and because the TP is graded according to standard deviation starting from 5%, a refinement method had to be implemented.
 
 ### A refined approach
 The idea here is to combine the first approaches :
 * A first phase with growing chromosomes going for a fast search
-* A second phase of refining the path found during the fisrt phase (-> minimizing the length)</ul>\
+* A second phase of refining the path found during the fisrt phase (-> minimizing the length)
+
 This method is the one used in labyrinth.py and is the one corresponding the most to the condtions of the TP (fast, find solutions, has refined - but not necessarily optimized - path)
 
 ## Fitness function
@@ -84,14 +86,14 @@ The angle taken by this algorithm is to go as fast as possible. As such, going 2
 ### multiple values
 The fitness function returns two values : 
 * The ratio value, that will be explained next
-* The length traveled to reach this ratio - either the length to go to the end of the path, or to reach the target.</ul>
-\
+* The length traveled to reach this ratio - either the length to go to the end of the path, or to reach the target.
+
 \
 ```creator.create("FitnessMin", base.Fitness, weights=(-10000.0, -10.0))```\
 The function does not treat the two values identically - it is weighed :
 * The first value, the ratio, is treated with asbolute priority (weight -10 000)
-* The second value, the length or number of steps, is a low priority (weight -10)</ul>
-\
+* The second value, the length or number of steps, is a low priority (weight -10)
+
 \
 ```creator.create("Individual", list, fitness=creator.FitnessMin)```\
 The fitnessMin and negative weights means that the selection will try to minimize these values as much as possible.\
@@ -121,7 +123,7 @@ Which is perfectly what we want. This ratio avoid some known problems and has so
 * The individual tries to travel a lot by maximizing its distance from the start, avoiding beeing stuck "just next to the final case but with a wall in the middle"
 * The individual tends to not be stuck in loops, because going back on its track does not earn him points
 * The quotient naturally converges to 0, the sability does not have to be checked
-* The ratio takes into account twisted path - we do not know what is the optimized path, but we can try to guess it by minmaxing the movements\
+* The ratio takes into account twisted path - we do not know what is the optimized path, but we can try to guess it by minmaxing the movements
 
 The result is multiplied by 100 to have more distinction between the results.\
 Also, a problem has to be taken in account : The divisor can not be 0. A such, if start==current, a big value is returned to avoid this individual. (This individual would not have moved, and would be infinitely bad !)
@@ -157,11 +159,13 @@ This value can never reach 0. However, it can not continually go smaller either.
 The cycle of a genetic algorithm goes through steps :
 * Selection
 * Mutation
-* Crossover\
+* Crossover
+
 Each of these steps is important, and dictates the behavior of the algorithm. Let's review them.
 ### Selection
 For both phases, the selection phase is the same :
-* Seltournament(pop, tournSize)\
+* Seltournament(pop, tournSize)
+
 The tournament selects the best individuals - not THE global best, but the local best amongst a portion of the population.\
 This selection is adapted to both of our phases, softening the "local maximum" problem while keeping good individual through cycles.\
 \
