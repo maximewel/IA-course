@@ -277,5 +277,5 @@ The dual-strategies algorithm is also very flexible with the given grids - adapt
 Finally, the optimization of the paths is not a focus point of this algorithm. The speed is clearly the objective here, and the results show that the results path are always good, but not everytime quite perfect - with a high risk of local maximum due to phase I. But this is expected with the current implementation.\
 \
 Finally, if you want to test how crazy the speedy method is, we recommend you test the notebook in this project.\
-It tests both methods (speedy and refined) on a 40*40 grid. it shows the optimized or not-optimized path.\
+It tests both methods (speedy and refined) on a 40\*40 grid. it shows the optimized or not-optimized path.\
 You can also crank this number to 100*100 and be amazed by the ~2 seconds it take to resolve the problem !
