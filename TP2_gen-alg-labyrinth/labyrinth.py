@@ -193,7 +193,7 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
     MUTPB = 0.6
     CXPB = 0.7
     populationSize = 300
-    tournSize = 10
+    tournSize = 30
     #init pop, fitness
     pop = toolbox.init_population(n=populationSize)
     toolbox.evaluate(pop, end_cell)
@@ -205,7 +205,7 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
     caseFound = False
     #stagnancy supervisors
     sameLenghtCounter = 0 #stagnancy counter
-    sameLengthStop = 5 #stagnancy stop
+    sameLengthStop = 30 #stagnancy stop
     lastLengthPath = 0 #stagnancy memory
     #main loop
     while timePassed < max_time_s and sameLenghtCounter < sameLengthStop:
@@ -243,7 +243,7 @@ def solve_labyrinth(grid, start_cell, end_cell, max_time_s):
         else:
             #check for stagnancy : can we go faster ?
             fastestPath = np.min([ind.fitness.values[1] for ind in pop if ind.fitness.values[0] == 0])
-            sameLenghtCounter += 1 if fastestPath == lastLengthPath else 0
+            sameLenghtCounter = sameLenghtCounter+1 if fastestPath == lastLengthPath else 0
             lastLengthPath = fastestPath
         
         #end of this cycle - calculate time & iterations

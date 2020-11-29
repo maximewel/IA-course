@@ -51,7 +51,9 @@ Before going further in the details of the implementation, let's state that the 
 The first methodology tested was a very classical, "le compte est bon"-like genetic algorithm.\
 The evaluation functon of this classical first try is kept as an archive in misc/old_eval.\
 It was promising : The evaluation looked at the case that came the closer to the end (manhattan-wise), and returned a value of this manhattan + the difference between its path and the "perfect-path" to the end. The results were often very very close -if not identical- to the optimized path.\
-It proved its limitation time-wise (it is pretty slow) and with complexe path (ex : "doors", "walls" it kept planting into, etc...).
+It proved its limitation time-wise (it is pretty slow) and with complexe path (ex : "doors", "walls" it kept planting into, etc...).\
+\
+Also, this evaluation, based on opti_path, is based on the assumption that the shortest path is the optimal manhattan between start and stop. But even at 10% walls, there is **no assurance** that the length of the final path is the length of the opti path. As such, this method is not flexible and do not adapt to exotic topologies of terrains.
 
 ### Fast and Furious
 The **FAST AND FURIOUS** approach (It *must* be yelled) is the first try with a genetic algorithm with growing chromosomes.\
@@ -67,7 +69,8 @@ The idea here is to combine the first approaches :
 * A first phase with growing chromosomes going for a fast search
 * A second phase of refining the path found during the fisrt phase (-> minimizing the length)
 
-This method is the one used in labyrinth.py and is the one corresponding the most to the condtions of the TP (fast, find solutions, has refined - but not necessarily optimized - path)
+This method is the one used in labyrinth.py and is the one corresponding the most to the condtions of the TP (fast, find solutions, has refined - but not necessarily optimized - path).\
+It has the pros of the growing method (flexible and fast), and the pros of the optimizing method (more refined path, less wiggly/useless steps)
 
 ## Fitness function
 The fitness function's responsibility is to give a [multi]-value evaluation of the population, individual by individual.\
@@ -213,14 +216,15 @@ This algorithm was tested with different values. It can be concluded that :
 * A value <100 yields diversity problems. Even 100 leads to some occasionnal problems
 * A value ~1000 starts to be too much, is long to compute, and yield very divergent results - especially on little grids
 
-As the algorithm must work on little grids too, a value in the 1000 order is abandonned. A little value (<100) impacts the performance of the big grids too much. Therefore, a population of 300 is taken.
+As the algorithm must work on little grids too, a value in the 1000 order is abandonned. A little value (<100) impacts the performance of the big grids too much. Therefore, a population of 300 is taken for grids going from 10\*10 to 40\*40.
 
 #### Tournament size
 The tournament size represents the number of individuals takent from one cycle to the other.\
 In the tournament selection, the individual choosen are the best amongst a local portion of the population.\
 During test, it is frequent that at the end of phase 1, multiple individuals reach the target (1-5). As such, and to ensure diversity throug cycles, we want to take multiple individuals.\
 A value too high retains very bad chromosomes from cycle to cycle.\
-The good compromise is a tournsize of "10", which seems to work well for our grids.
+The good compromise is a tournsize of "30", which seems to work well for our grids.\
+Also, as we have a population of 300, having 30 tournaments means that the chromosomes will compete with 10 other chromosomes. It avoids local maximum problems, while keeping some elitism through the next cycle. It is generally good to have a population size divisible by the tournament size, to make nice and fair tournaments for all chromosomes.
 ### Mutations probabilities
 The mutations probabilities determines if an indivdual is likely to endure a mutation or a crossover.
 #### Mutation
@@ -244,8 +248,10 @@ As we want a fast convergance of the chromosomes, cranking it up to 0.7 allow fo
 The CXPB is just a factor not to be too high. To have a more precise algorithm, it can be made lower (test on 0.2~0.4 and still works like a charm, but the 7 iterations to find a solution turn to 15-20).
 ### Stagnation stopping counter
 The stagnation stopping counter represents the number of time the algorithm must be stuck on a length value before declaring it the winner chromosome and stopping the implementation.\
-After some test, it was kept at 5 to stay on a very fast algorithm. It could be cranked up to higher numbers (10 ? 30 ? 50 ?), impacting the performances, but maybe improving the refinement phase.\
-**This parameter must be adapted to the solution we want to have : Fast, or refined ?**. Here, we have chosen fast but decent.
+After some test, it was kept at 30 to stay on a very fast algorithm. It could be cranked up to higher numbers (50 ? 100 ? 200 ?), impacting the performances, but maybe improving the refinement phase.\
+**This parameter must be adapted to the solution we want to have : Fast, or refined ?**. Here, we have chosen fairly fast and decent.\
+If we want to let it compute for days, it can easily be upped.
+
 ## Pros, cons and ameliorations
 Our dual strategy algorithm yielded good results. But as in every algorithm, it has flaws that could be adressed in a future enhancement.
 ### Pro
