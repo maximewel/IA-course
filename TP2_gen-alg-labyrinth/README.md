@@ -133,27 +133,27 @@ The stopping conditions are directly linked to the fitness function above. It is
 This algorithm has two phases - thus two stopping conditions, the first result beeing pipelined into the second phase.\
 Of course, aditionnally to these two stopping condition, the "time" condition is implemented. But it is not interessting and will not be discussed here.
 ### Phase I - growing phase
-The growing phase is fast : About 10 iterations on a 40*40 grid. Its stopping condition is easy : **Stop when one of your individual is are on the end_cell**\
+The growing phase is fast : About 10 iterations on a 40*40 grid. Its stopping condition is easy : **Stop when at least one of the individual reaches on the end_cell**\
 ```if fitnessesAtTarget:```\
 ```    toolbox.register("mate", tools.cxOnePoint)```\
 \
 The second phase can then go on, with one - or many- chromosomes reaching the target.\
 As there are 10 winners in the tournament, the 10 "best chromosomes" are selected to go on phase II. They contain at least one already reaching the target, probably in an suboptimal way.\
 **It is essential that the growing algorithm stops here** : As the growing goes, the individuals become exponentially bigger. The computation of the fitness function is directly linked to the length of the individuals : Letting it go further will lead to disastrous wait time for each iteration, and the result would not be pretty.\
-The force of this growing phase is to converge very fast : The first few iteration have chromosomes that could possibly not reach the target because they are too small, but that will slowly converge to the solution iteration by iteration. But this force is also a weakness after that point - we can not continue with this method when the target is reached, as we do not want bigger chromosomes\
-The labyrinth_speedy.py implementation stops there.\
+The force of this growing phase is to converge very fast : The first few iteration have chromosomes that could not reach the target because they are too small, but that will slowly converge to the solution iteration by iteration. But this force is also a weakness after that point - we can not continue with this method when the target is reached, as we do not want bigger chromosomes.\
+The labyrinth_speedy.py implementation stops there.
 
 ### Phase II - refinement phase and stagnancy avoidance
-During the refinement phase, the fitness function yields a tuple :
+The refinement phase use the fact that the fitness function yields a tuple :
 ```(ratio, length)```\
-The length is used in this second refinement phase.\
+This phases uses the second parameter, the length of the individuals.\
 We have only chromosomes close to the path, with the winner already in the pool.\
 The goal is to refine the path. The fitness function naturally tries to minimize the second parameter, even though it prioritizes the first one. Therefore, by changing the crossover of the individuals from "growing" to "fixed size", the individuals will naturally converge to a better path.\
 \
 This value can never reach 0. However, it can not continually go smaller either. As such, a notion of "stability" - or its opposite, "stagnancy" is introduced.
 * During this phase, at each iteration, the minimun value of all the path values (fit[2]) is kept in memory
 * A counter of stagnancy is incremented each time the length stagnates between iterations
-* When the stagnancy counter reaches the fixes limit (5), the algorithm stops, judging it can not find a smaller path after failing to do so 5 times.
+* When the stagnancy counter reaches the fixed limit (5), the algorithm stops, judging it can not find a smaller path after failing to do so 5 times.
 
 ## Deap algorithm tools
 The cycle of a genetic algorithm goes through steps :
@@ -169,7 +169,6 @@ For both phases, the selection phase is the same :
 The tournament selects the best individuals - not THE global best, but the local best amongst a portion of the population.\
 This selection is adapted to both of our phases, softening the "local maximum" problem while keeping good individual through cycles.\
 \
-\
 It has been thought but not tested to use once a selBest(pop, reaching-indiv-count) when going from phase 1 to phase 2, to select only the individuals that reach the target. It could introduce a very heavy diversity problem during phase 2, or it could lead to a big amelioration of its refinement. But the implementation of this feature would have taken time that i did not have.
 
 ### Mutate
@@ -179,15 +178,84 @@ As the code work with integers (0->3) for directions, the function can not be "f
 The "mutUniformInt" built-in deap function mutates the individual by changing one of its gene with a random integer.\
 The borns of the integers are simply the smaller and bigger value of the code, and the probability to flip each integer is kept at 10%.
 ### Crossover
-
+Thow crossover methods are used during phase I & II.
+#### Phase I - growing
+The first phase crossover function is "messyOnePoint"\
+```toolbox.register("mate", tools.cxMessyOnePoint)```\
+According to the deap documentation, "Executes a one point crossover on sequence individual. The crossover will in most cases change the individuals size. The two individuals are modified in place."\
+Which means that the crossover will be similar to cxOnePoint, but will not care about keeping the length of the individuals at all : A chrmosome of 10 steps can be added with a chunk of 10 genes, doubling its size.\
+This is this grow that assures our convergence at minimal cost : We can check only the last case, not every one of them - the convergence beeing assured by the growing of the individuals.\
+This is also the reason we should never continue with this function when the goal is reached. The chunk added are relative to the individuals sizes, and when they reach 500-600 in size (typically on 40*40 grids), this grow can be very fast and very detrimental to the speed of the iteration.
+#### Phase 2 - fixed-size
+```toolbox.register("mate", tools.cxOnePoint)```\
+For phase II, the algorithm go back to a standard OnePoint used in the first "le compte est bon" algorithm. It goes back to fixed-size crossovers, with equal-length sequences of genes exchanged between individuals.
 
 ## Hyper-parameters
+The hyper parameters are very important for the algorithm to function correctly, and must be tailored to the problem it is facing.
 ### Chromosome length
-### Pop size and tournament
+The chromosome length is a very important factor of our labyrinth problem. 
+* At first, it was fixed at m*n/2 (wrost solution), but this solution is not efficient with ~10% walls
+* Then, it was fixed at m+n (perfect solution), but this solution is not always reachable
+
+But with the growing algorithm, the length is determined on-the-fly by the indidivuals themselves converging to the solution.\
+However, to assure this convergence, and as only the last case is evaluated, the growing must be incremental.\
+Going with a length too big at start is detrimental to our methodology. Therefore :
+* The starting size of the chromosome is set to ```math.ceil((h + w) / 8)```. Ceil to never be 0, and h+w/8 to start slow and let the chromosome grow slowly.
+
+##### Pop size
+The population size is very important :
+* Too few, and there is not enough diversity. There is a very high chance of local maximum, and a high chance of never finding a solution
+* Too much, and the solutions will be more random (more chance that a random solution fit the path, but not by converging, simply by luck) and will take more time to compute
+
+This algorithm was tested with different values. It can be concluded that :
+* A value <100 yields diversity problems. Even 100 leads to some occasionnal problems
+* A value ~1000 starts to be too much, is long to compute, and yield very divergent results - especially on little grids
+
+As the algorithm must work on little grids too, a value in the 1000 order is forsaken. A little value (<100) impacts the performance of the big grids too much. Therefore, a population of 300 is taken.
+
+#### Tournament size
+The tournament size represents the number of individuals takent from one cycle to the other.\
+In the tournament selection, the individual choosen are the best amongst a local portion of the population.\
+During test, it is frequent that at the end of phase 1, multiple individuals reach the target (1-5). As such, and to ensure diversity throug cycles, we want to take multiple individuals.\
+A value too high retains very bad chromosomes from cycle to cycle.\
+The good compromise is a tournsize of "10", which seems to work well for our grids.
 ### Mutations probabilities
+The mutations probabilities determines if an indivdual is likely to endure a mutation or a crossover.
+#### Mutation
+The mutation is the "flip" of a code to another random code of our chromosome.\
+This mutation is kept just-over-the-middle, at 0.6.\
+```MUTPB = 0.6```\
+This mutation factor should not go higher than that. It introduces a lot of diversity, because a change of a single gene of our chromosome can cascade into the entire path going another way with the on-the-fly corrections.\
+It is already high, allowing the genes to find path through medium-complexity mazes. 
+* Lower than ~0.6, and the individuals can be stuck in "natural trap" of the terrain. 
+* Higher than ~ 0.6, and the individuals become higlhy unstable
+  
+#### Crossover
+The crossover factor is the chance to cross two individuals.\
+```CXPB = 0.7```\
+The crossing of 2 individuals in phase 1 represents the growing of the chromosomes.\
+As we want a fast convergance of the chromosomes, cranking it up to 0.7 allow for very fast solutions.\
+* Higher than that and we risk crossing too much and "missing" the solution. And missing the solution is not detected by our algorithm : the computation time will become exponentially higher, and it could be bad
+* Lower than 0.7 and the algorithm is slower. That's it. It still works perfectly, but the convergence is slower.
 
+The CXPB is just a factor not to be too high. To have a more precise algorithm, it can be made lower (test on 0.2~0.4 and still works like a charm, but the 7 iterations to find a solution turn to 15-20).
+### Stagnation stopping counter
+The stagnation stopping counter represents the number of time the algorithm must be stuck on a length value before declaring it the winner chromosome and stopping the implementation.\
+After some test, it was kept at 5 to stay on a very fast algorithm. It could be cranked up to higher numbers (10 ? 30 ? 50 ?), impacting the performances, but maybe improving the refinement phase.\
+**This parameter must be adapted to the solution we want to have : Fast, or refined ?**. Here, we have chosen fast but decent.
 ## Pros, cons and ameliorations
-
+Our dual strategy algorithm yielded good results. But as in every algorithm, it has flaws that could be adressed in a future enhancement.
+### Pro
+* Fast
+* Reliable in finding a solution
+* Work for very big grids
+### Cons
+* The path is not perfectly optimized
+* If the convergence fails, the divergence will be painfull
+### Ameliorations
+* Detecting a divergence and restarting the algorithm
+* Separating the two phases
+* Better the second phase by adapting hyper-parameters, easier if they are separated
 ## Conclusion
 The fixed-length chromosomes method is :
 * Very slow at converging to the solution
