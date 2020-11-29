@@ -178,7 +178,7 @@ As the code work with integers (0->3) for directions, the function can not be "f
 The "mutUniformInt" built-in deap function mutates the individual by changing one of its gene with a random integer.\
 The borns of the integers are simply the smaller and bigger value of the code, and the probability to flip each integer is kept at 10%.
 ### Crossover
-Thow crossover methods are used during phase I & II.
+Two different crossover methods are used during phase I & II : The growing and the fixed size.
 #### Phase I - growing
 The first phase crossover function is "messyOnePoint"\
 ```toolbox.register("mate", tools.cxMessyOnePoint)```\
@@ -200,18 +200,18 @@ The chromosome length is a very important factor of our labyrinth problem.
 But with the growing algorithm, the length is determined on-the-fly by the indidivuals themselves converging to the solution.\
 However, to assure this convergence, and as only the last case is evaluated, the growing must be incremental.\
 Going with a length too big at start is detrimental to our methodology. Therefore :
-* The starting size of the chromosome is set to ```math.ceil((h + w) / 8)```. Ceil to never be 0, and h+w/8 to start slow and let the chromosome grow slowly.
+* The starting size of the chromosome is set to ```math.ceil((h + w) / 8)```. Ceil to never be 0, and h+w/8 to start slow and let the chromosome grow at its pace.
 
 ##### Pop size
 The population size is very important :
 * Too few, and there is not enough diversity. There is a very high chance of local maximum, and a high chance of never finding a solution
-* Too much, and the solutions will be more random (more chance that a random solution fit the path, but not by converging, simply by luck) and will take more time to compute
+* Too much, and the solutions will be more random (more chance that a random solution reaches the target, but not by converging, simply by luck) and will take more time to compute
 
 This algorithm was tested with different values. It can be concluded that :
 * A value <100 yields diversity problems. Even 100 leads to some occasionnal problems
 * A value ~1000 starts to be too much, is long to compute, and yield very divergent results - especially on little grids
 
-As the algorithm must work on little grids too, a value in the 1000 order is forsaken. A little value (<100) impacts the performance of the big grids too much. Therefore, a population of 300 is taken.
+As the algorithm must work on little grids too, a value in the 1000 order is abandonned. A little value (<100) impacts the performance of the big grids too much. Therefore, a population of 300 is taken.
 
 #### Tournament size
 The tournament size represents the number of individuals takent from one cycle to the other.\
@@ -227,14 +227,15 @@ This mutation is kept just-over-the-middle, at 0.6.\
 ```MUTPB = 0.6```\
 This mutation factor should not go higher than that. It introduces a lot of diversity, because a change of a single gene of our chromosome can cascade into the entire path going another way with the on-the-fly corrections.\
 It is already high, allowing the genes to find path through medium-complexity mazes. 
-* Lower than ~0.6, and the individuals can be stuck in "natural trap" of the terrain. 
-* Higher than ~ 0.6, and the individuals become higlhy unstable
+* Lower than ~0.6, and the individuals can be stuck in "natural trap"  because they do not have enough instability. 
+* Higher than ~ 0.6, and the individuals become highly unstable - too much to be usable
+* Higher than ~0.6 also tends to make chromosomes with very "wiggly" path, going left-and-right a lot and creating little artifacts of mistakes
   
 #### Crossover
 The crossover factor is the chance to cross two individuals.\
 ```CXPB = 0.7```\
 The crossing of 2 individuals in phase 1 represents the growing of the chromosomes.\
-As we want a fast convergance of the chromosomes, cranking it up to 0.7 allow for very fast solutions.\
+As we want a fast convergance of the chromosomes, cranking it up to 0.7 allow for very fast solutions.
 * Higher than that and we risk crossing too much and "missing" the solution. And missing the solution is not detected by our algorithm : the computation time will become exponentially higher, and it could be bad
 * Lower than 0.7 and the algorithm is slower. That's it. It still works perfectly, but the convergence is slower.
 
@@ -261,6 +262,7 @@ The fixed-length chromosomes method is :
 * Very slow at converging to the solution
 * Very good at optimizing the solutions
 * Easily trapped by obstacles
+
 The growing-length chromosomes method is :
 * Very fast at converging to the solution
 * Very bad (incapable) of optimizing solution
