@@ -202,6 +202,8 @@ However, to assure this convergence, and as only the last case is evaluated, the
 Going with a length too big at start is detrimental to our methodology. Therefore :
 * The starting size of the chromosome is set to ```math.ceil((h + w) / 8)```. Ceil to never be 0, and h+w/8 to start slow and let the chromosome grow at its pace.
 
+To further clarify the length of the chromosomes, a **stat bench** is displayed when the chromosome is found, showing the mean, min and max of the population length. It is always fun seeing the disparities with this method. It also shows when the solution found is close to the mean (usually, >2 solutions), or is an outsider (generally an early bird, sometimes an small individual lagging behind the group).
+
 ##### Pop size
 The population size is very important :
 * Too few, and there is not enough diversity. There is a very high chance of local maximum, and a high chance of never finding a solution
@@ -272,4 +274,8 @@ Combining both strategies yielded very good results, altghough the hyper-paramet
 This implementation represents a successfull proof-of-concept of the application of both strategies to converge rapidly to an acceptable solution.\
 This philosophy could be pushed further, maybe by separating the two phases in different "while" loop to make the code more understandable, and to trully differentiate and optimize each phase. This could mean pushing the strategies to their true limits, and could yield even better results while staying very fast.\
 The dual-strategies algorithm is also very flexible with the given grids - adapting its size to the shape and size of the terrain.\
-Finally, the optimization of the paths is not a focus point of this algorithm. The speed is clearly the objective here, and the results show that the results path are always good, but not everytime quite perfect - with a high risk of local maximum due to phase I. But this is expected with the current implementation.
+Finally, the optimization of the paths is not a focus point of this algorithm. The speed is clearly the objective here, and the results show that the results path are always good, but not everytime quite perfect - with a high risk of local maximum due to phase I. But this is expected with the current implementation.\
+\
+Finally, if you want to test how crazy the speedy method is, we recommend you test the notebook in this project.\
+It tests both methods (speedy and refined) on a 40*40 grid. it shows the optimized or not-optimized path.\
+You can also crank this number to 100*100 and be amazed by the ~2 seconds it take to resolve the problem !
