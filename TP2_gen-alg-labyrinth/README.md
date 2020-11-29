@@ -4,7 +4,7 @@ This README explains its key implementation points.
 
 ## Specifications
 Let's define the problem first :
-* The environnement is a M*N grid (M*M actually, they are square)
+* The environnement is a M\*N grid (M\*M actually, they are square)
 * On the grid are walls (value=1) and empty cells (value=0)
 * The goal is to find a path form start to end (tested with (0,0) -> (w-1,h-1))
 * The grids are 10\*10 to 40\*40, the algorithm must work on each one of them, there are given time limite for each of them
@@ -64,38 +64,38 @@ But as we kept bumping into sub-optimized path, and because the TP is graded acc
 ### A refined approach
 The idea here is to combine the first approaches :
 * A first phase with growing chromosomes going for a fast search
-* A second phase of refining the path found during the fisrt phase (-> minimizing the length)\
+* A second phase of refining the path found during the fisrt phase (-> minimizing the length)</ul>\
 This method is the one used in labyrinth.py and is the one corresponding the most to the condtions of the TP (fast, find solutions, has refined - but not necessarily optimized - path)
 
 ## Fitness function
 The fitness function's responsibility is to give a [multi]-value evaluation of the population, individual by individual.\
 The first method's fitness took care of evaluating the closer-to-the-end case of the path.\
 With the **growing chromosomes**, the length of the individuals is **exponentially growing** as the crosover go, meaning that we can be **less vigilant** about each case of the path, while still ensuring **progressive convergence of the path**.\
-As such, during the step-by-step analysis, this function now only check if the end case is reached.\
+As such, during the step-by-step analysis, this function now only check if the end case is reached. It then evaluated the individual based on the last case reached by its path.\
 \
 After some research on the best fitness function, i found this source(https://www.researchgate.net/publication/233786685_A-Mazer_with_Genetic_Algorithm) that talked about a ratio rather than a simple weight as i did with my first method.\
-The idea of a ratio between the distance to the start and the distance to the end is very promising. The fitness function returns:\
+The idea of a ratio between the distance to the start and the distance to the end is very promising. Our fitness function returns:\
 ```((float(Manhattan(target, currentCase)) / Manhattan(start_cell, currentCase)) * 100, i+1)```
 
 ### Error correction
 The fitness function is the one evaluating the chromosome - and its path.\
-The angle taken by this algorith, developpement is to go as fast as possible. As such, going 2 times on the data (on each path of each individual) is a no-no. To avoid this double data loop, the correction is directly done on-the-fly during the fitness function.
+The angle taken by this algorithm is to go as fast as possible. As such, going 2 times on the data (on each path of each individual) to correct and then evaluate them is a no-no. To avoid this double data loop, the correction is directly done on-the-fly during the fitness function.
 
 ### multiple values
 The fitness function returns two values : 
 * The ratio value, that will be explained next
-* The length traveled to reach this ratio - either the length to go to the end of the path, or to reach the target.
+* The length traveled to reach this ratio - either the length to go to the end of the path, or to reach the target.</ul>
 \
 \
 ```creator.create("FitnessMin", base.Fitness, weights=(-10000.0, -10.0))```\
 The function does not treat the two values identically - it is weighed :
 * The first value, the ratio, is treated with asbolute priority (weight -10 000)
-* The second value, the length or number of steps, is a low priority (weight -10)
+* The second value, the length or number of steps, is a low priority (weight -10)</ul>
 \
 \
 ```creator.create("Individual", list, fitness=creator.FitnessMin)```\
 The fitnessMin and negative weights means that the selection will try to minimize these values as much as possible.\
-This means that the selection will take first the chromosome with the smallest ratio, and amongst them, the individuals with the smalles path lenght (steps).\
+This means that the selection will take first the chromosome with the smallest ratio, and amongst them, the individuals with the smalles path lenght (steps).
 
 ### The ratio
 The ratio used is :
