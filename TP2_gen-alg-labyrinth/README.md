@@ -156,7 +156,7 @@ The goal is to refine the path. The fitness function naturally tries to minimize
 This value can never reach 0. However, it can not continually go smaller either. As such, a notion of "stability" - or its opposite, "stagnancy" is introduced.
 * During this phase, at each iteration, the minimun value of all the path values (fit[2]) is kept in memory
 * A counter of stagnancy is incremented each time the length stagnates between iterations
-* When the stagnancy counter reaches the fixed limit (5), the algorithm stops, judging it can not find a smaller path after failing to do so 5 times.
+* When the stagnancy counter reaches the fixed limit (30), the algorithm stops, judging it can not find a smaller path after failing to do so 5 times.
 
 ## Deap algorithm tools
 The cycle of a genetic algorithm goes through steps :
@@ -223,7 +223,8 @@ This algorithm was tested with different values. It can be concluded that :
 * A value <100 yields diversity problems. Even 100 leads to some occasionnal problems
 * A value ~1000 starts to be too much, is long to compute, and yield very divergent results - especially on little grids
 
-As the algorithm must work on little grids too, a value in the 1000 order is abandonned. A little value (<100) impacts the performance of the big grids too much. Therefore, a population of 300 is taken for grids going from 10\*10 to 40\*40.
+As the algorithm must work on little grids too, a value in the 1000 order is abandonned. A little value (<100) impacts the performance of the big grids too much.\
+Therefore, a population of 300 is taken for grids going from 10\*10 to 40\*40.
 
 #### Tournament size
 The tournament size represents the number of individuals takent from one cycle to the other.\
@@ -232,6 +233,7 @@ During test, it is frequent that at the end of phase 1, multiple individuals rea
 A value too high retains very bad chromosomes from cycle to cycle.\
 The good compromise is a tournsize of "30", which seems to work well for our grids.\
 Also, as we have a population of 300, having 30 tournaments means that the chromosomes will compete with 10 other chromosomes. It avoids local maximum problems, while keeping some elitism through the next cycle. It is generally good to have a population size divisible by the tournament size, to make nice and fair tournaments for all chromosomes.
+
 ### Mutations probabilities
 The mutations probabilities determines if an indivdual is likely to endure a mutation or a crossover.
 #### Mutation
@@ -255,9 +257,9 @@ As we want a fast convergance of the chromosomes, cranking it up to 0.7 allow fo
 The CXPB is just a factor not to be too high. To have a more precise algorithm, it can be made lower (test on 0.2~0.4 and still works like a charm, but the 7 iterations to find a solution turn to 15-20).
 ### Stagnation stopping counter
 The stagnation stopping counter represents the number of time the algorithm must be stuck on a length value before declaring it the winner chromosome and stopping the implementation.\
-After some test, it was kept at 30 to stay on a very fast algorithm. It could be cranked up to higher numbers (50 ? 100 ? 200 ?), impacting the performances, but maybe improving the refinement phase.\
+After some test, it was kept at 30 to stay on a very fast algorithm. It could be cranked up to higher numbers (50 ? 100 ? 200 ?), impacting the performances, but potentially improving the refinement phase.\
 **This parameter must be adapted to the solution we want to have : Fast, or refined ?**. Here, we have chosen fairly fast and decent.\
-If we want to let it compute for days, it can easily be upped.
+If we want to let it compute for minutes, hours, or days, it can easily be upped.
 
 ## Pros, cons and ameliorations
 Our dual strategy algorithm yielded good results. But as in every algorithm, it has flaws that could be adressed in a future enhancement.
@@ -288,8 +290,9 @@ This implementation represents a successfull proof-of-concept of the application
 This philosophy could be pushed further, maybe by separating the two phases in different "while" loop to make the code more understandable, and to trully differentiate and optimize each phase. This could mean pushing the strategies to their true limits, and could yield even better results while staying very fast.\
 The dual-strategies algorithm is also very flexible with the given grids - adapting its size to the shape and size of the terrain.\
 Finally, the optimization of the paths is not a focus point of this algorithm. The speed is clearly the objective here, and the results show that the results path are always good, but not everytime quite perfect - with a high risk of local maximum due to phase I. But this is expected with the current implementation.\
+\
 This TP teached me that the genetic algorithm results are very dependent of their hyper parameters, and **must be specialized for the problems we face**. It was hard to find a good solution for grids going from 10\*10 to 40\*40, and the solution can be even more optimized if we know the size and general topology of the labyrinth.\
 \
 Finally, if you want to test how crazy the speedy method is, we recommend you test the notebook in this project.\
-It tests both methods (speedy and refined) on a 40\*40 grid. it shows the optimized or not-optimized path.\
-You can also crank this number to 100*100 and be amazed by the ~1-4 seconds it take for the speedy to resolve the problem !
+It tests both methods (speedy and refined) on a 40\*40 random grid with 10% walls. it shows the optimized or non-optimized path.\
+You can also crank this number to 100\*100 and be amazed by the ~1-4 seconds it take for the speedy to resolve the problem !
