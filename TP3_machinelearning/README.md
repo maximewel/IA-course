@@ -34,7 +34,8 @@ Lors du fit, la méthode validation_split est mis à 0.2, ce qui fait que les x_
 ``` history = model.fit(x_train, y_train, batch_size=100, epochs=50, validation_split=0.2) ```\
 Ce set de training a déja été séparé d'un set de validation plus tôt lors du parcours des datagrammes : \
 ```train, test = train_test_split(timeserie, test_size=proportionTest)```\
-Ce qui fait que le neural network s'entraine sur 80% des données dont 20% est utilisée à chaque époch pour le test, et il est validé ensuite à la fin sur le 20% des données restantes, ce qui nous permet de bien respecter la séparation train/test/split.
+Ce qui fait que le neural network s'entraine sur 80% des données dont 20% est utilisée à chaque époch pour le test, et il est validé ensuite à la fin sur le 20% des données restantes, ce qui nous permet de bien respecter la séparation train/test/split.\
+Il a été également fait très attention de garder les timeseries **continues** et de ne pas shuffle les speed ou même de ne pas ré-ordonner les timeséries entre elles.
 
 ### Fonctions d'activation
 De nombreuses fonctions d'activation sont disponibles avec keras, et beaucoup ont été envisagées pour le TP. Au final, le neural network est composé de trois couches :
@@ -59,9 +60,9 @@ La pipeline est composée d'un transformer de normalisation qui sert à éviter 
 
 ### Performances
 Le decison tree est fabriqué et vérifié par une matrice de confusion et l'affichage de certaines métriques de vérifications.\
-Matrice de confusion :
+Matrice de confusion :\
 ![Image](./img/machine_learning.png)\
-La matrice est très bonne et montre beaucoup de positifs, et presque aucun faux négatifs. De plus, la question peut se poser : Si il y en avait eu, aurait-ce été si grave ? On peut imaginer que ce dataset sert à survéiller des machines au quotidien pour détecter des electrical_failures, et pour moi, un faux positif 'electrical failure' est terrible (on ne veut pas changer une machine qui fonctionne) mais un faux négatif 'electrical failure' n'est pas très grave (On détectera probablement l'erreur le lendemain, ça ne presse pas à la timeserie prêt). un peut le contre-exemple des datasets sur les maladies qu'il faut détecter à tout prix en évitant les faux négatifs.
+La matrice est très bonne et montre beaucoup de positifs, et presque aucun faux négatifs. De plus, la question peut se poser : Si il y en avait eu, aurait-ce été si grave ? On peut imaginer que ce dataset sert à survéiller des machines au quotidien pour détecter des electrical_failures, et pour moi, un faux positif 'electrical failure' est terrible (on ne veut pas changer une machine qui fonctionne) mais un faux négatif 'electrical failure' n'est pas très grave (On détectera probablement l'erreur le lendemain, ça ne presse pas à la timeserie prêt). un peut le contre-exemple des datasets sur les maladies qu'il faut détecter à tout prix en évitant les faux négatifs.\
 ![Image](./img/dtree_results.png)\
 Les métriques de résultats du best_model sont toutes excellentes, le decision tree semble particulièrement adapté à l'exercice.
 
