@@ -1,7 +1,3 @@
-"""
-Steve Mendes Reis, Maxime Welcklen
-"""
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,6 +7,23 @@ from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
+
+import graphviz
+from sklearn import tree
+def show_decision_tree(clf, data_feature_names, data_target_names, name=""):
+    """This function visualize a decision tree"""
+    dot_data = tree.export_graphviz(clf, out_file=None) 
+    graph = graphviz.Source(dot_data)
+    graph.render(name) 
+    dot_data = tree.export_graphviz(clf,                                    
+                                    out_file=None,  
+                                    filled=True,
+                                    feature_names=data_feature_names,  
+                                    class_names=data_target_names,
+                                    rounded=True,  
+                                    special_characters=True)  
+    graph = graphviz.Source(dot_data)  
+    return graph
 
 #Initial values for our dataset
 labels = ["balanced", "electric_fault", "unbalanced"]
@@ -30,7 +43,6 @@ for label in labels:
         print(extracted_features)"""
 
         #Hand-made extraction
-
         # Unique parameters
         rollingWindow = 500
 
@@ -81,63 +93,66 @@ for timeserie in timeserieTable :
 
 #Concat features and label, extract label
 train = pd.concat(timeserieTrainTable)
-y_train = to_categorical(np.asarray(train.pop('label')).astype(np.float32))
+y_train = np.asarray(train.pop('label')).astype(np.float32)
 x_train = np.asarray(train).astype(np.float32)
 
 test = pd.concat(timeserieTestTable)
-y_test = to_categorical(np.asarray(test.pop('label')).astype(np.float32))
+y_test = np.asarray(test.pop('label')).astype(np.float32)
 x_test = np.asarray(test).astype(np.float32)
 
+featuresName = train.columns
 
-#Neural network model building
-# My input shape :
-# (speed; norma1,2,3; mean norm acc; rolling norm acc1,2,3)
-#https://towardsdatascience.com/7-popular-activation-functions-you-should-know-in-deep-learning-and-how-to-use-them-with-keras-and-27b4d838dfe6
-#Init layers
-#sigmoid - logistic
-#tanh - might be interesting because we have negative values with accelerations sometimes
-#relu - carefull : neurons can die
-#elu - slower than relu
-#selu - good and normalizing, only for dense layers
-""" Although your mileage will vary, in general SELU > ELU > leaky ReLU (and its variants) > ReLU > tanh > logistic. 
-If the network’s architecture prevents it from self-normalizing, then ELU may perform better than SELU (since SELU is not smooth at z = 0). """
-model = Sequential()
-model.add(layers.Dense(120, activation="relu"))
-model.add(layers.Dense(60, activation="elu"))
+#DECISION TREE 
+from sklearn.datasets import load_breast_cancer
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import classification_report, plot_confusion_matrix
+from sklearn.model_selection import GridSearchCV
+import numpy as np
+from sklearn.preprocessing import Normalizer
+from sklearn.pipeline import Pipeline
 
-#model.add(layers.Dense(80, activation="selu"))
-#model.add(layers.Dense(50, activation="relu"))
-#model.add(layers.Dense(100, activation="tanh")) Doesn't yield great results
-#model.add(layers.Dense(100, activation="sigmoid")) Doesn't yield great results
+#Grid Search
+pipeline = Pipeline([
+    ('tf', Normalizer()),
+    ('clf', DecisionTreeClassifier()),
+])
 
-model.add(layers.Dense(len(labels), activation="softmax")) #Get final label, with 3 as we have 3 classes
+#To know what we can change in the gridsearch, 
+#print(pipeline.get_params().keys())
 
-model.compile(
-    loss=keras.losses.CategoricalCrossentropy(),
-    optimizer=keras.optimizers.RMSprop(),
-    metrics=["accuracy"],
-)
+# Gridsearch
+parameters = {
+    'tf__norm': ["l1", "l2", "max"],
+    'clf__criterion': ['gini', 'entropy'],
+    'clf__max_depth' : range(5,10),
+}
 
-history = model.fit(x_train, y_train, batch_size=100, epochs=50, validation_split=0.2)
+gs_clf = GridSearchCV(pipeline, parameters, verbose=1, cv=5)
+gs_clf.fit(x_train, y_train)
 
-#Plot from rajinth
-plt.plot(history.history['accuracy'])
-plt.plot(history.history['val_accuracy'])
-plt.title('model accuracy while training')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.legend(['train', 'val'], loc='upper left')
+#Fetch best AI
+bestModel = gs_clf.best_estimator_
+
+gs_clf.best_score_
+print("...Estimating best parameters...")
+for param_name in sorted(parameters.keys()):
+    print(f"Best value for param {param_name} : {gs_clf.best_params_[param_name]}")
+
+
+#Print gridsearch final accuracy
+y_pred = bestModel.predict(x_test)
+print(classification_report(y_test, y_pred))
+plot_confusion_matrix(bestModel, x_test, y_test, cmap=plt.cm.Blues, values_format="3.0f")
 plt.show()
 
-validation_scores = model.evaluate(x_test, y_test, verbose=2)
-print(f"Predictions sample : {model.predict(x_test[:10])}")
-print(f"Score : loss={validation_scores[0]}, accuracy = {validation_scores[1]}")
-
-#Test to see if printing validation data yields good results :-/
-"""
-plt.plot(model.predict(x_test), "b", y_test, "r")
-plt.title('model accuracy on validation data')
-plt.ylabel('accuracy')
-plt.xlabel('feature')
-plt.legend(['train', 'val'], loc='upper left')
+#Show the decision tree obtained by the best model
+#construct the decision tree according to best params and print it
+""""
+#Carefull : Doens't seem to work
+bestDecisionTree = Pipeline([
+    ('tf', Normalizer(norm=gs_clf.best_params_["tf__norm"])),
+    ('clf', DecisionTreeClassifier(max_depth=gs_clf.best_params_["clf__max_depth"], criterion=gs_clf.best_params_["clf__criterion"])),
+])
+bestDecisionTree.fit(x_train, y_train)
+show_decision_tree(bestDecisionTree, featuresName, labels, "./graph")
 plt.show()"""
