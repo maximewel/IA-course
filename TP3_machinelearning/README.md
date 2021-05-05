@@ -46,7 +46,7 @@ Le réseau de neurone passe les informations dans une couche "relu" classique, p
 
 ### Performances
 Amélioration de l'IA selon les epoques :\
-[Image](./img/neural_network.png)\
+![Image](./img/neural_network.png)\
 On note des soubresauts au départ qui s'améliorent rapidement. Les % gagnés baissent progressivement et on note que l'IA s'en sort plutôt bien sur le training.\
 ```Score : loss=0.0006439918652176857, accuracy = 0.9998557567596436```\
 La validation ressort 99,9% d'accuracy sur des données différentes du train & test. Ainsi, le model semble bien entrainé et évite l'overfitting.
@@ -60,9 +60,9 @@ La pipeline est composée d'un transformer de normalisation qui sert à éviter 
 ### Performances
 Le decison tree est fabriqué et vérifié par une matrice de confusion et l'affichage de certaines métriques de vérifications.\
 Matrice de confusion :
-[Image](./img/machine_learning.png)\
+![Image](./img/machine_learning.png)\
 La matrice est très bonne et montre beaucoup de positifs, et presque aucun faux négatifs. De plus, la question peut se poser : Si il y en avait eu, aurait-ce été si grave ? On peut imaginer que ce dataset sert à survéiller des machines au quotidien pour détecter des electrical_failures, et pour moi, un faux positif 'electrical failure' est terrible (on ne veut pas changer une machine qui fonctionne) mais un faux négatif 'electrical failure' n'est pas très grave (On détectera probablement l'erreur le lendemain, ça ne presse pas à la timeserie prêt). un peut le contre-exemple des datasets sur les maladies qu'il faut détecter à tout prix en évitant les faux négatifs.
-[Image](./img/dtree_results.png)\
+![Image](./img/dtree_results.png)\
 Les métriques de résultats du best_model sont toutes excellentes, le decision tree semble particulièrement adapté à l'exercice.
 
 ### Gridsearch et hyper paramètres
@@ -79,3 +79,10 @@ gini, max_depth a 7 et normalizer max.\
 * Normalizer : max signifie que les valeurs d'entrées sont scalées par rapport au maximum absolu des valeurs
 
 Une tentative sans succès a été faite d'affichier le tree final mais cela a raté (erreur : 'La pipeline n'est pas fit').
+
+
+## Comparaison
+Le neural network semble avoir plus de peine à trouver ses marques que le decision tree. Cependant, on peut noter que le gridsearch prend bien plus de temps à calculer que le neural network à s'entrainer sur les 50 epoques.\
+Les résultats finaux sont assez similaires, même si le decision tree est un peut plus performant. A mon avis, le dataset se prête fortement à un decision tree et le résultat me parrait cohérent avec l'algorithme sous-jaccent.\
+Une meilleur extraction des données pourrait éventuellement changer la donne ?\
+Morale de l'histoire : Le machine learning n'est pas toujours à jeter à la poubelle au profit des neural networks !
